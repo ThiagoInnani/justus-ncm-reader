@@ -4,17 +4,16 @@ import customtkinter
 
 import pyperclip
 
-class TableFrame(customtkinter.CTkFrame):
+class BuildTable(customtkinter.CTkFrame):
     def __init__(self, master, titles, values, height):
         super().__init__(master)
+
         self.grid_columnconfigure(index=0, weight=1)
         self.grid_rowconfigure(0, weight=1)
         self.titles = titles
         self.values = values
         self.height = height
-        self.create_tree()
-    
-    def create_tree(self):
+
         # Add a Treeview widget
         self.tree = ttk.Treeview(self, column=self.titles, show='headings', height=self.height)
 
@@ -73,7 +72,7 @@ class TableFrame(customtkinter.CTkFrame):
         for i in range(len(values)):
             self.tree.insert('', 'end', text=i+1, values=values[i])
 
-class FilterFrame(customtkinter.CTkFrame):
+class Filter(customtkinter.CTkFrame):
     def __init__(self, master):
         super().__init__(master)
         self.grid_columnconfigure(0, weight=1)
@@ -129,9 +128,7 @@ class MainButtonFrame(customtkinter.CTkFrame):
         self.variable = customtkinter.StringVar(value="")
         self.text = text
         self.buttons = []
-        self.create_buttons()
 
-    def create_buttons(self):
         for i in range(len(self.text)):
             button = customtkinter.CTkButton(self, text = self.text[i], width=300, height=35)
             self.buttons.append(button)

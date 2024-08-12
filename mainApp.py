@@ -1,158 +1,141 @@
 import tkinter as tk
-from tkinter import *
-from tkinter import ttk
-from tkinter import filedialog as fd
+from tkinter import ttk, filedialog as fd, PhotoImage, Menu
 from tkinter.messagebox import showinfo
 import customtkinter
-
 import xml.etree.ElementTree as ET
 import os
-#from PIL import Image, ImageTk
+import mysql.connector
 
 
-#Class Import
-import fileAlteration
+# Imports de Classes
 import buildWidgets
+import processArchives
 
 class App(customtkinter.CTk):
+    """Classe principal da aplicação"""
+
     def __init__(self):
-        def openXmlFile(self):
-            diretorio = fileAlteration.FileAlteration.selectFileExplorer()
-            if not diretorio:
-                return
-            
-            arquivos_xml = [os.path.join(diretorio, f) for f in os.listdir(diretorio) if f.endswith('.xml')]
-
-            self.tableData = []
-
-            ns = {"": "http://www.portalfiscal.inf.br/nfe"}
-
-
-            for arquivo in arquivos_xml:
-                tree = ET.parse(arquivo)
-                root = tree.getroot()
-
-                nota_num = root.find('.//nNF', ns)
-                ncm_list = [ncm.text for ncm in root.findall('.//NCM', ns)]
-                ncm = ', '.join(ncm_list)
-                try:
-                    self.tableData.append([nota_num.text, ncm])
-                except:
-                    continue    
-            self.tableFrame.clean_table()
-            self.tableFrame.add_item(self.tableData)
-        
-        def reviewXmlFile(self):
-            filter_values = self.filter_frame.get_values()
-            print(filter_values)
-            filter_values = [value for value in filter_values if value]  # Remove campos vazios
-
-            if not filter_values:  # Se todos os campos estiverem vazios, mostra todos os dados
-                filtered_data = self.tableData
-            else:
-                filtered_data = []
-                for row in self.tableData:
-                    ncm_values = row[1].split(', ')
-                    if not any(ncm in filter_values for ncm in ncm_values):
-                        filtered_data.append(row)
-
-            self.tableFrame.clean_table()
-            self.tableFrame.add_item(filtered_data)
-
-        def changeTheme(self):
-            if self.theme == 1:
-                customtkinter.set_appearance_mode("light")
-                themeToLight(self)
-                self.theme = 0
-
-            else:
-                customtkinter.set_appearance_mode("dark")
-                themeToDark(self)
-                self.barraDeMenus.configure()
-                self.theme = 1
-            self.barraDeMenus.config(background=self.menuBarColor, foreground=self.menuFontColor)
-            self.configure(bg=self.backgroundColor)
-            self.style = ttk.Style()
-            #self.style.theme_use("default")
-            self.style.configure("Treeview",
-                                 background=self.tableValueColor,
-                                 foreground=self.tableValueFont,
-                                 fieldbackground = self.tableValueColor)
-            self.style.configure("Treeview.Heading", background=self.tableHeaderColor, foreground=self.tableHeaderFont, font="bold")
-            self.style.map('Treeview', background=[("selected", self.tableHeaderColor)])
-
-        def themeToDark(self):
-            self.menuBarColor = '#3B3E45'
-            self.menuFontColor = "#FFFFFF"
-            self.backgroundColor = '#242424'
-            self.tableHeaderColor = '#1F6AA5'
-            self.tableHeaderFont = "#FFFFFF"
-            self.tableHeaderHover = "#fc0093"
-            self.tableValueColor = '#242424'
-            self.tableValueFont = "#FFFFFF"
-            customtkinter.set_default_color_theme("blue")
-
-        def themeToLight(self):
-            self.menuBarColor = "#FFFFFF"
-            self.menuFontColor = "#000000"
-            self.backgroundColor = '#DBDBDB'
-            self.tableHeaderColor = '#1F6AA5'
-            self.tableHeaderFont = "#FFFFFF"
-            self.tableHeaderHover = "#fc0093" #325882
-            self.tableValueColor = "#FFFFFF"
-            self.tableValueFont = "#000000"
-            customtkinter.set_default_color_theme("dark-blue")
-        
         super().__init__()
-        pastaApp=os.path.dirname(__file__)
+        self.pasta_app = os.path.dirname(__file__)
         self.title("Filtrador de NCMs Justus")
         self.geometry("1200x800")
-        self.grid_columnconfigure((0,1,2), weight=1)
-        self.grid_rowconfigure((0,1,2), weight=1)
-        self.tk.call('wm', 'iconphoto', self._w, PhotoImage(file=pastaApp+'/src/icon.png'))
-        self.style = ttk.Style()
+        self._setup_window_icon()
+        self._setup_grid()
+        self._setup_menu()
+        self._setup_theme()
+        #self._connect_database()
+        self._create_widgets()
+        self._change_theme()
 
-        if customtkinter.get_appearance_mode() == 1:
-            print("O sistema está no modo escuro")
-            self.theme = 1
-            customtkinter.set_appearance_mode("dark")
-            themeToDark(self)
-        else:
-            self.theme = 0
-            print("O sistema está no modo de luz")
-            customtkinter.set_appearance_mode("light")
-            themeToLight(self)
-        
+    def _setup_window_icon(self):
+        """Configura o ícone da janela"""
+        icon_path = os.path.join(self.pasta_app, 'src/icon.png')
+        self.tk.call('wm', 'iconphoto', self._w, PhotoImage(file=icon_path))
 
-        self.barraDeMenus = Menu(self, background= self.menuBarColor)
-        menuArquivos = Menu(self.barraDeMenus, tearoff=0)
-        menuOpcoes = Menu(self.barraDeMenus, tearoff=0)
-        menuArquivos.add_command(label="Importar Arquivo XML",command=lambda: openXmlFile(self))
-        menuArquivos.add_separator()
-        menuArquivos.add_command(label="Fechar", command=self.quit)
-        menuOpcoes.add_command(label="Trocar de Tema", command = lambda: changeTheme(self))
-        self.barraDeMenus.add_cascade(label="Arquivos", menu=menuArquivos)
-        self.barraDeMenus.add_cascade(label="Opções", menu=menuOpcoes)
-        self.config(menu=self.barraDeMenus)
+    def _setup_grid(self):
+        """Configura o layout de grid da janela"""
+        self.grid_columnconfigure((0, 1, 2), weight=1)
+        self.grid_rowconfigure((0, 1, 2), weight=1)
 
-        self.toplevel_window = None
+    def _setup_theme(self):
+        """Configura o tema inicial da aplicação"""
+        current_theme = customtkinter.get_appearance_mode()
+        self.theme = 1 if current_theme == "dark" else 0
+        customtkinter.set_appearance_mode("dark" if self.theme == 1 else "light")
+        self.apply_theme()
 
-        #Declaração de Frames
-        self.button_frame = buildWidgets.MainButtonFrame(self, text=["Importar XMLs","Filtrar XMLs"])
-        self.tableFrame = buildWidgets.BuildTable(self, titles=['N° da nota', 'NCM(s)'], values=[], height=40)
-        self.filter_frame = buildWidgets.Filter(self)
-        #Declaração de Widgets
-        self.button_frame.buttons[0].configure(command=lambda: openXmlFile(self))
-        self.button_frame.buttons[1].configure(command=lambda: reviewXmlFile(self))
+    def _setup_menu(self):
+        """Configura a barra de menus"""
+        self.menu_bar = Menu(self)
+        self._create_file_menu()
+        self._create_options_menu()
+        self.config(menu=self.menu_bar)
 
-        #Atribuição GRID
+    def _create_file_menu(self):
+        """Cria o menu Arquivos"""
+        file_menu = Menu(self.menu_bar, tearoff=0)
+        file_menu.add_command(label="Importar Arquivo XML", command=lambda: processArchives.ProcessXmls.openXmlFile(self))
+        file_menu.add_separator()
+        file_menu.add_command(label="Fechar", command=self.quit)
+        self.menu_bar.add_cascade(label="Arquivos", menu=file_menu)
+
+    def _create_options_menu(self):
+        """Cria o menu Opções"""
+        options_menu = Menu(self.menu_bar, tearoff=0)
+        options_menu.add_command(label="Trocar de Tema", command=self.change_theme)
+        self.menu_bar.add_cascade(label="Opções", menu=options_menu)
+
+    def _connect_database(self):
+        """Conecta com o servidor local MySQL"""
+        mydb = mysql.connector.connect(
+        host="localhost",
+        user="root",
+        password=""
+        )
+    
+    def _create_widgets(self):
+        """Cria os widgets da aplicação"""
+        self.button_frame = buildWidgets.MainButtonFrame(self, text=["Importar XMLs", "Filtrar XMLs"])
+        self.table_frame = buildWidgets.TableFrame(self, titles=['N° da nota', 'NCM(s)'], values=[], height=40)
+        self.filter_frame = buildWidgets.FilterFrame(self)
+
+        self.button_frame.buttons[0].configure(command=lambda: processArchives.ProcessXmls.openXmlFile(self))
+        self.button_frame.buttons[1].configure(command=lambda: processArchives.ProcessXmls.reviewXmlFile(self))
+
         self.filter_frame.grid(row=0, column=3, padx=40, pady=(20, 0), sticky="WN")
-        self.button_frame.grid(row=2, column=3, padx=40, pady=(20,0), sticky="W")
-        self.tableFrame.grid(row=0, column=0, rowspan=3, columnspan=3, sticky="NWSE")
-        #self.image_label.grid()
-        
-        changeTheme(self)
+        self.button_frame.grid(row=2, column=3, padx=40, pady=(20, 0), sticky="W")
+        self.table_frame.grid(row=0, column=0, rowspan=3, columnspan=3, sticky="NWSE")
 
-app = App()
-print(app)
-app.mainloop()
+    def _change_theme(self):
+        """Alterna entre os temas claro e escuro"""
+        self.theme = 1 - self.theme
+        customtkinter.set_appearance_mode("dark" if self.theme == 1 else "light")
+        self._apply_theme()
+
+    def _apply_theme(self):
+        """Aplica o tema configurado"""
+        self.configure(bg=self.background_color)
+        self.style = ttk.Style()
+        self.style.configure("Treeview",
+                             background=self.table_value_color,
+                             foreground=self.table_value_font,
+                             fieldbackground=self.table_value_color)
+        self.style.configure("Treeview.Heading",
+                             background=self.table_header_color,
+                             foreground=self.table_header_font,
+                             font="bold")
+        self.style.map('Treeview', background=[("selected", self.table_header_color)])
+        self.menu_bar.config(background=self.menu_bar_color, foreground=self.menu_font_color)
+
+    @property
+    def menu_bar_color(self):
+        return '#3B3E45' if self.theme == 1 else '#FFFFFF'
+
+    @property
+    def menu_font_color(self):
+        return "#FFFFFF" if self.theme == 1 else "#000000"
+
+    @property
+    def background_color(self):
+        return '#242424' if self.theme == 1 else '#DBDBDB'
+
+    @property
+    def table_header_color(self):
+        return '#1F6AA5'
+
+    @property
+    def table_header_font(self):
+        return "#FFFFFF"
+
+    @property
+    def table_value_color(self):
+        return '#242424' if self.theme == 1 else "#FFFFFF"
+
+    @property
+    def table_value_font(self):
+        return "#FFFFFF" if self.theme == 1 else "#000000"
+
+
+if __name__ == "__main__":
+    app = App()
+    app.mainloop()
