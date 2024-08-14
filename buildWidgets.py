@@ -19,7 +19,7 @@ class TableFrame(customtkinter.CTkFrame):
         self.tree = ttk.Treeview(self, column=self.titles, show='headings', height=self.height)
 
         for i in range(len(self.titles)):
-            self.tree.column("# "+str(i+1), anchor=CENTER, width=600 if i==1 else 100)
+            self.tree.column("# "+str(i+1), anchor=CENTER, width=600 if i==4 else 100)
             self.tree.heading("# "+str(i+1), text=self.titles[i])
         
         # Insert the data in Treeview widget

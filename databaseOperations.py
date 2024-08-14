@@ -109,10 +109,11 @@ class DatabaseNcm:
         data = self.download_ncm_table()
         try:
             for nomenclatura in data['Nomenclaturas']:
+                codigo_sem_pontos = nomenclatura['Codigo'].replace('.', '')
                 self.db_operations.cursor.execute('''
                     INSERT INTO Nomenclaturas (Codigo, Descricao)
                     VALUES (%s, %s)
-                ''', (nomenclatura['Codigo'], nomenclatura['Descricao']))
+                ''', (codigo_sem_pontos, nomenclatura['Descricao']))
             self.db_operations.save_and_close()
         except mysql.connector.Error as err:
             print(f"Erro ao inserir dados na tabela: {err}")

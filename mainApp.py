@@ -68,22 +68,22 @@ class App(customtkinter.CTk):
 
     def _connect_database(self):
         # Uso dos módulos
-        db_ops = databaseOperations.DatabaseOperations(
+        self.db_ops = databaseOperations.DatabaseOperations(
             host="localhost",
             user="root",
             password="D1k1xs5j#!",
             database_name="ncmreader"
         )
 
-        if db_ops.connect_to_database():
-            db_ops._initialize_database()
-            db_ncm = databaseOperations.DatabaseNcm(db_ops)
+        if self.db_ops.connect_to_database():
+            self.db_ops._initialize_database()
+            db_ncm = databaseOperations.DatabaseNcm(self.db_ops)
             db_ncm.insert_ncm_in_table()
     
     def _create_widgets(self):
         """Cria os widgets da aplicação"""
         self.button_frame = buildWidgets.MainButtonFrame(self, text=["Importar XMLs", "Filtrar XMLs"])
-        self.table_frame = buildWidgets.TableFrame(self, titles=['N° da nota', 'NCM(s)'], values=[], height=40)
+        self.table_frame = buildWidgets.TableFrame(self, titles=['N° da nota', 'Produto', 'NCM(s)', 'CFOP', 'Descrição'], values=[], height=40)
         self.filter_frame = buildWidgets.FilterFrame(self)
 
         self.button_frame.buttons[0].configure(command=lambda: processArchives.ProcessXmls.openXmlFile(self))
