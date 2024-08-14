@@ -23,7 +23,7 @@ class ProcessXmls:
             for arquivo in arquivos_xml:
                 tree = ET.parse(arquivo)
                 root = tree.getroot()
-
+                
                 nota_num = root.find('.//nNF', ns)
                 ncm_list = [ncm.text for ncm in root.findall('.//NCM', ns)]
                 ncm = ', '.join(ncm_list)

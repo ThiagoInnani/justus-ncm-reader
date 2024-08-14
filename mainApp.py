@@ -67,9 +67,18 @@ class App(customtkinter.CTk):
         self.menu_bar.add_cascade(label="Opções", menu=options_menu)
 
     def _connect_database(self):
-        databaseOperations.DatabaseOperations._connectToDatabase(self)
-        #consult = databaseOperations.DatabaseOperations._getCommand(self, "SELECT * FROM Nomenclaturas")
-        #print(consult)
+        # Uso dos módulos
+        db_ops = databaseOperations.DatabaseOperations(
+            host="localhost",
+            user="root",
+            password="D1k1xs5j#!",
+            database_name="ncmreader"
+        )
+
+        if db_ops.connect_to_database():
+            db_ops._initialize_database()
+            db_ncm = databaseOperations.DatabaseNcm(db_ops)
+            db_ncm.insert_ncm_in_table()
     
     def _create_widgets(self):
         """Cria os widgets da aplicação"""
