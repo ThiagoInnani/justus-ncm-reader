@@ -4,12 +4,13 @@ from tkinter.messagebox import showinfo
 import customtkinter
 import xml.etree.ElementTree as ET
 import os
-import mysql.connector
+
 
 
 # Imports de Classes
 import buildWidgets
 import processArchives
+import databaseOperations
 
 class App(customtkinter.CTk):
     """Classe principal da aplicação"""
@@ -23,7 +24,7 @@ class App(customtkinter.CTk):
         self._setup_grid()
         self._setup_menu()
         self._setup_theme()
-        #self._connect_database()
+        self._connect_database()
         self._create_widgets()
         self._change_theme()
 
@@ -42,7 +43,7 @@ class App(customtkinter.CTk):
         current_theme = customtkinter.get_appearance_mode()
         self.theme = 1 if current_theme == "dark" else 0
         customtkinter.set_appearance_mode("dark" if self.theme == 1 else "light")
-        self.apply_theme()
+        self._apply_theme()
 
     def _setup_menu(self):
         """Configura a barra de menus"""
@@ -62,16 +63,13 @@ class App(customtkinter.CTk):
     def _create_options_menu(self):
         """Cria o menu Opções"""
         options_menu = Menu(self.menu_bar, tearoff=0)
-        options_menu.add_command(label="Trocar de Tema", command=self.change_theme)
+        options_menu.add_command(label="Trocar de Tema", command=self._change_theme)
         self.menu_bar.add_cascade(label="Opções", menu=options_menu)
 
     def _connect_database(self):
-        """Conecta com o servidor local MySQL"""
-        mydb = mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password=""
-        )
+        databaseOperations.DatabaseOperations._connectToDatabase(self)
+        #consult = databaseOperations.DatabaseOperations._getCommand(self, "SELECT * FROM Nomenclaturas")
+        #print(consult)
     
     def _create_widgets(self):
         """Cria os widgets da aplicação"""
