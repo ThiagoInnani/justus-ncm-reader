@@ -54,17 +54,37 @@ class ProcessXmls:
 
     def reviewXmlFile(self):
         filter_values = self.filter_frame.get_values()
-        print(filter_values)
-        filter_values = [value for value in filter_values if value]  # Remove campos vazios
+        filtered_data = self.tableData
 
-        if not filter_values:  # Se todos os campos estiverem vazios, mostra todos os dados
-            filtered_data = self.tableData
-        else:
-            filtered_data = []
-            for row in self.tableData:
-                ncm = row[2]
-                if ncm not in filter_values:
-                    filtered_data.append(row)
+        def compare(value, operation, target):
+            if operation == "é igual a":
+                return value == target
+            elif operation == "é diferente de":
+                return value != target
+            elif operation == "maior que":
+                return value > target
+            elif operation == "menor que":
+                return value < target
+            elif operation == "contém":
+                return target in value
+            return False
+
+        def apply_filter(row, field, operation, value):
+            fields = ["N° da nota", "Produto", "NCM(s)", "CFOP", "Descrição"]
+            index = fields.index(field)
+            return compare(row[index], operation, value)
+
+        for i, (logic, field, operation, value) in enumerate(filter_values):
+            if field and operation and value:
+                if i == 0:
+                    filtered_data = [row for row in filtered_data if apply_filter(row, field, operation, value)]
+                elif logic == "E":
+                    filtered_data = [row for row in filtered_data if apply_filter(row, field, operation, value)]
+                elif logic == "OU":
+                    additional_data = [row for row in self.tableData if apply_filter(row, field, operation, value)]
+                    filtered_data.extend(additional_data)
+                    filtered_data = [list(x) for x in set(tuple(x) for x in filtered_data)]
 
         self.table_frame.clean_table()
         self.table_frame.add_item(filtered_data)
+

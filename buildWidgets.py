@@ -85,42 +85,61 @@ class FilterFrame(customtkinter.CTkFrame):
         frame = customtkinter.CTkFrame(self)
         frame.grid(row=index, column=0, pady=5, sticky="ewn")
 
-        entry = customtkinter.CTkEntry(frame, placeholder_text="Insira NCMs", width=200)
-        entry.grid(row=0, column=0, padx=(0, 10))
-        entry.configure(validate="key", validatecommand=(self.register(self.validate_number), '%P', '%d'))
-        
+        if index > 0:
+            logic_combo = customtkinter.CTkComboBox(frame, values=["E", "OU"], width=50)
+            logic_combo.grid(row=0, column=0, padx=(0, 10))
+        else:
+            logic_combo = None
+
+        field_combo = customtkinter.CTkComboBox(frame, values=["N° da nota", "Produto", "NCM(s)", "CFOP", "Descrição"], width=150)
+        field_combo.grid(row=0, column=1, padx=(0, 10))
+
+        operation_combo = customtkinter.CTkComboBox(frame, values=["é igual a", "é diferente de", "maior que", "menor que", "contém"], width=150)
+        operation_combo.grid(row=0, column=2, padx=(0, 10))
+
+        entry = customtkinter.CTkEntry(frame, placeholder_text="Valor", width=200)
+        entry.grid(row=0, column=3, padx=(0, 10))
+
         btn_add = customtkinter.CTkButton(frame, text="+", width=30, command=self.add_text_field)
-        btn_add.grid(row=0, column=1, padx=(0, 10))
-        
+        btn_add.grid(row=0, column=4, padx=(0, 10))
+
         btn_remove = customtkinter.CTkButton(frame, text="-", width=30, command=lambda f=frame: self.remove_text_field(f))
-        btn_remove.grid(row=0, column=2)
+        btn_remove.grid(row=0, column=5)
 
         if index > 0:
-            self.text_fields[-1][1].grid_forget()
+            self.text_fields[-1][4].grid_forget()
 
-        self.text_fields.append((entry, btn_add, btn_remove))
+        self.text_fields.append((logic_combo, field_combo, operation_combo, entry, btn_add, btn_remove, frame))
 
     def remove_text_field(self, frame):
         if len(self.text_fields) > 1:
+            # Remove a frame correspondente
             for widgets in frame.winfo_children():
                 widgets.destroy()
             frame.grid_forget()
-            self.text_fields.remove(next(filter(lambda f: f[0].master == frame, self.text_fields)))
+            self.text_fields = [tf for tf in self.text_fields if tf[6] != frame]
 
-        if len(self.text_fields) > 0:
-            self.text_fields[-1][1].grid(row=0, column=1, padx=(0, 10))
+            # Atualiza os índices das linhas restantes
+            for index, (logic_combo, field_combo, operation_combo, entry, btn_add, btn_remove, frame) in enumerate(self.text_fields):
+                frame.grid(row=index, column=0, pady=5, sticky="ewn")
+                if index == 0:
+                    if logic_combo:
+                        logic_combo.grid_forget()
+                else:
+                    if not logic_combo:
+                        logic_combo = customtkinter.CTkComboBox(frame, values=["E", "OU"], width=50)
+                        logic_combo.grid(row=0, column=0, padx=(0, 10))
+                        self.text_fields[index] = (logic_combo, field_combo, operation_combo, entry, btn_add, btn_remove, frame)
 
-    def validate_number(self, value, action_type):
-        if action_type == '1':
-            if value.isdigit() and len(value) <= 8:
-                return True
-            else:
-                return False
-        else:
-            return True
+            # Reexibir o botão "+" na última linha
+            self.text_fields[-1][4].grid(row=0, column=4, padx=(0, 10))
 
     def get_values(self):
-        return [entry.get() for entry, _, _ in self.text_fields]
+        return [
+            (logic_combo.get() if logic_combo else None, field_combo.get(), operation_combo.get(), entry.get())
+            for logic_combo, field_combo, operation_combo, entry, _, _, _ in self.text_fields
+        ]
+
     
 class MainButtonFrame(customtkinter.CTkFrame):
     def __init__(self, master, text):
