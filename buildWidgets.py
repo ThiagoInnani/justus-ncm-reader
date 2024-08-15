@@ -8,7 +8,7 @@ class TableFrame(customtkinter.CTkFrame):
     def __init__(self, master, titles, values, height):
         super().__init__(master)
         self.grid_columnconfigure(index=0, weight=1)
-        self.grid_rowconfigure(0, weight=1)
+        self.grid_rowconfigure(index=0, weight=1)
         self.titles = titles
         self.values = values
         self.height = height
@@ -29,7 +29,7 @@ class TableFrame(customtkinter.CTkFrame):
         self.tree.bind("<<TreeviewSelect>>", lambda x: on_tree_select(self.tree, x))
         self.tree.bind("<Control-Key-c>", lambda x: copy_from_treeview(self.tree, x))
 
-        self.tree.grid(row=0, column=0, padx=10, pady=20, sticky="WSEN")
+        self.tree.grid(row=0, column=0, padx=10, pady=5, sticky="WSEN")
 
         def copy_from_treeview(tree, event):
             selection = tree.selection()

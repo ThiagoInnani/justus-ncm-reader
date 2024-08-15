@@ -110,14 +110,21 @@ class DatabaseNcm:
         try:
             for nomenclatura in data['Nomenclaturas']:
                 codigo_sem_pontos = nomenclatura['Codigo'].replace('.', '')
+                descricao_corrigida = DatabaseNcm.replace_multiple(nomenclatura['Descricao'], ['-', '<i>', '</i>'])
+
                 self.db_operations.cursor.execute('''
                     INSERT INTO Nomenclaturas (Codigo, Descricao)
                     VALUES (%s, %s)
-                ''', (codigo_sem_pontos, nomenclatura['Descricao']))
+                ''', (codigo_sem_pontos, descricao_corrigida))
             self.db_operations.save_and_close()
         except mysql.connector.Error as err:
             print(f"Erro ao inserir dados na tabela: {err}")
             self.db_operations._close_connection()
+        
+    def replace_multiple(text, words_to_replace):
+        for word in words_to_replace:
+            text = text.replace(word, "")
+        return text
 
 
 
