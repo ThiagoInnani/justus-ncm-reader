@@ -140,18 +140,33 @@ class FilterFrame(customtkinter.CTkFrame):
             for logic_combo, field_combo, operation_combo, entry, _, _, _ in self.text_fields
         ]
 
-    
 class MainButtonFrame(customtkinter.CTkFrame):
-    def __init__(self, master, text):
+    def combobox_callback(choice):
+        print("combobox dropdown clicked:", choice)
+
+    def __init__(self, master):
         super().__init__(master)
         self.grid_columnconfigure(0, weight=1)
-        self.variable = customtkinter.StringVar(value="")
-        self.text = text
-        self.buttons = []
-        self.create_buttons()
 
-    def create_buttons(self):
-        for i in range(len(self.text)):
-            button = customtkinter.CTkButton(self, text = self.text[i], width=300, height=35)
-            self.buttons.append(button)
-            button.grid(row=i, column=0, padx=10, pady=(10,0), sticky="EW")
+        import_button = customtkinter.CTkButton(self, text="Importar XMLs")
+        process_button = customtkinter.CTkButton(self, text="Filtrar XMLs")
+
+        #grid
+        import_button.grid(row=1, column=0, padx=10, pady=(0, 10), sticky="ew")
+        process_button.grid(row=2, column=0, padx=10, pady=(0, 10), sticky="ew")
+
+        separator = ttk.Separator(self, orient='horizontal')
+        separator.grid(row=3, column=0, padx=10, pady=10, sticky="ew")
+        
+        save_button = customtkinter.CTkButton(self, text="Salvar Filtro Atual")
+        save_button.grid(row=4, column=0, padx=10, pady=(0, 10), sticky="ew")
+
+        combobox = customtkinter.CTkComboBox(master=self,
+                                     values=['Filtro Novo'],
+                                     command=self.combobox_callback)
+        combobox.set("Filtro Novo")  # set initial value
+        combobox.grid(row=5, column=0, padx=10, pady=(0, 10), sticky="ew")
+
+        self.buttons = [import_button, process_button, save_button]
+
+

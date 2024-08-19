@@ -82,15 +82,17 @@ class App(customtkinter.CTk):
     
     def _create_widgets(self):
         """Cria os widgets da aplicação"""
-        self.button_frame = buildWidgets.MainButtonFrame(self, text=["Importar XMLs", "Filtrar XMLs"])
+        self.mainButton_frame = buildWidgets.MainButtonFrame(self)
         self.table_frame = buildWidgets.TableFrame(self, titles=['N° da nota', 'Produto', 'NCM(s)', 'CFOP', 'Descrição'], values=[], height=25)
         self.filter_frame = buildWidgets.FilterFrame(self)
 
-        self.button_frame.buttons[0].configure(command=lambda: processArchives.ProcessXmls.openXmlFile(self))
-        self.button_frame.buttons[1].configure(command=lambda: processArchives.ProcessXmls.reviewXmlFile(self))
+        self.mainButton_frame.buttons[0].configure(command=lambda: processArchives.ProcessXmls.openXmlFile(self))
+        self.mainButton_frame.buttons[1].configure(command=lambda: processArchives.ProcessXmls.reviewXmlFile(self))
+        self.mainButton_frame.buttons[2].configure()
+
 
         self.filter_frame.grid(row=0, column=0, padx=40, pady=(20, 0), sticky="WN")
-        self.button_frame.grid(row=0, column=1, padx=(40, 0), pady=(20, 0), sticky="EN")
+        self.mainButton_frame.grid(row=0, column=1, padx=(40, 0), pady=(20, 0), sticky="NEW")
         self.table_frame.grid(row=2, column=0, columnspan=2, sticky="NWSE")
 
     def _change_theme(self):

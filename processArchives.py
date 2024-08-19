@@ -26,9 +26,7 @@ class ProcessXmls:
                 root = tree.getroot()
                 
                 nota_num = root.find('.//nNF', ns)
-                #xproduct = root.find('.//xProd', ns)
                 xproduct_list = [xproduct.text for xproduct in root.findall('.//xProd', ns)]
-                #cfop = root.find('.//CFOP', ns)
                 cfop_list = [cfop.text for cfop in root.findall('.//CFOP', ns)]
                 ncm_list = [ncm.text for ncm in root.findall('.//NCM', ns)]
                 

@@ -2,10 +2,6 @@ from tkinter import *
 from tkinter import filedialog as fd
 from tkinter.messagebox import showinfo
 
-import datetime
-import os
-import json
-
 class FileAlteration():
     def __init__():
         super().__init__()
