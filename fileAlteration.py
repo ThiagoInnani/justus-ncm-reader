@@ -7,7 +7,6 @@ class FileAlteration():
         super().__init__()
         
     def selectFileExplorer():
-        print("Chegou no select")
         directory = fd.askdirectory(
             title='Selecione o diretório',
             initialdir='',

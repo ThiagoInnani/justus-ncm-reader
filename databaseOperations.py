@@ -4,11 +4,11 @@ from mysql.connector import errorcode
 from ncm.client import FetchNcm
 
 class DatabaseOperations:
-    def __init__(self, host, user, password, database_name):
-        self.host = host
-        self.user = user
-        self.password = password
-        self.database_name = database_name
+    def __init__(self):
+        self.host = "localhost"
+        self.user = "root"
+        self.password = 'D1k1xs5j#!'
+        self.database_name = "ncmreader"
         self.connection = None
         self.cursor = None
 
@@ -59,29 +59,52 @@ class DatabaseOperations:
                 CREATE TABLE IF NOT EXISTS Nomenclaturas (
                     Codigo VARCHAR(50),
                     Descricao TEXT
-                )
-            ''')
-            print("Tabela 'Nomenclaturas' criada ou já existente.")
+                );
+                ''')
+            print('Cursor executou tabela 1 (Nomenclaturas)')
+            self.cursor.execute('''
+                CREATE TABLE IF NOT EXISTS Filter (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    name VARCHAR(255) NOT NULL
+                );
+                ''')
+            print('Cursor executou tabela 2 (Filters)')
+            self.cursor.execute('''
+                CREATE TABLE IF NOT EXISTS FilterLine (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    filter_id INT,
+                    logical_operator VARCHAR(10),
+                    field VARCHAR(255),
+                    operation VARCHAR(10),
+                    value VARCHAR(255),
+                    FOREIGN KEY (filter_id) REFERENCES Filter(id)
+                );
+                ''')
+            print('Cursor executou tabela 3 (FilterLine)')
+            print("Tabela 'Nomenclaturas', 'Filters', 'FilterLine' criadas ou já existentes.")
+            self._save_connection()
         except mysql.connector.Error as err:
             print(f"Erro ao criar a tabela: {err}")
             self._close_connection()
             exit(1)
 
-    def save_and_close(self):
+    def _save_connection(self):
         """Salva as mudanças e fecha a conexão"""
         try:
             if self.connection:
                 self.connection.commit()
-                self.connection.close()
-                print("Conexão com o banco de dados fechada.")
+                print("Alteração salva.")
         except mysql.connector.Error as err:
-            print(f"Erro ao fechar a conexão: {err}")
+            print(f"Erro ao salvar no banco de dados: {err}")
 
     def execute_command(self, command):
         """Executa um comando SQL e retorna os resultados"""
         try:
-            self.cursor.execute(command)
-            return self.cursor.fetchall()
+            if command == "lastrowid":
+                return self.cursor.lastrowid
+            else:
+                self.cursor.execute(command)
+                return self.cursor.fetchall()
         except mysql.connector.Error as err:
             print(f"Erro ao executar o comando: {err}")
             return None
@@ -90,6 +113,7 @@ class DatabaseOperations:
         """Fecha a conexão com o banco de dados"""
         if self.connection:
             self.connection.close()
+            print("Conexão com banco fechada")
 
 
 class DatabaseNcm:
@@ -106,6 +130,7 @@ class DatabaseNcm:
 
     def insert_ncm_in_table(self):
         """Insere os dados do JSON na tabela 'Nomenclaturas'"""
+        print("Inserindo dados NCM na tabela")
         data = self.download_ncm_table()
         try:
             for nomenclatura in data['Nomenclaturas']:
@@ -116,7 +141,7 @@ class DatabaseNcm:
                     INSERT INTO Nomenclaturas (Codigo, Descricao)
                     VALUES (%s, %s)
                 ''', (codigo_sem_pontos, descricao_corrigida))
-            self.db_operations.save_and_close()
+            self.db_operations._save_connection()
         except mysql.connector.Error as err:
             print(f"Erro ao inserir dados na tabela: {err}")
             self.db_operations._close_connection()
@@ -125,6 +150,5 @@ class DatabaseNcm:
         for word in words_to_replace:
             text = text.replace(word, "")
         return text
-
 
 

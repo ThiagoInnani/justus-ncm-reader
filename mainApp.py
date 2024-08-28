@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import ttk, filedialog as fd, PhotoImage, Menu
-from tkinter.messagebox import showinfo
+from tkinter import messagebox
 import customtkinter
 import xml.etree.ElementTree as ET
 import os
@@ -11,6 +11,7 @@ import os
 import buildWidgets
 import processArchives
 import databaseOperations
+import filter
 
 class App(customtkinter.CTk):
     """Classe principal da aplicação"""
@@ -68,27 +69,62 @@ class App(customtkinter.CTk):
 
     def _connect_database(self):
         # Uso dos módulos
-        self.db_ops = databaseOperations.DatabaseOperations(
-            host="localhost",
-            user="root",
-            password="D1k1xs5j#!",
-            database_name="ncmreader"
-        )
-
+        self.db_ops = databaseOperations.DatabaseOperations()
+    
         if self.db_ops.connect_to_database():
             self.db_ops._initialize_database()
+            #Confere se existe uma tabela Nomenclaturas preenchida
+            count = self.db_ops.execute_command("SELECT COUNT(*) FROM Nomenclaturas")
             db_ncm = databaseOperations.DatabaseNcm(self.db_ops)
-            db_ncm.insert_ncm_in_table()
+            if count[0][0] == 0:
+                db_ncm.insert_ncm_in_table()
+            db_filter = filter.Filter(self.db_ops)
     
     def _create_widgets(self):
+        def get_current_filter_lines(self):
+            self.values = self.filter_frame.get_values()
+            return self.values
+
+        def save_button_click_event(self):
+            nome_filtro_atual = self.mainButton_frame.get_current_filter()
+            # Se for um filtro novo
+            if nome_filtro_atual == "Filtro Novo":
+                dialog = customtkinter.CTkInputDialog(text="Digite o nome do filtro:", title="Nome do Filtro")
+                filter_name = dialog.get_input()
+                if filter_name:
+                    filter_lines = get_current_filter_lines(self)  # Define how to get the current filter lines
+                    filter.Filter.save_filter(self, filter_name, filter_lines)
+                    reload_combo_box(self)
+            # Se for um filtro já existente
+            else:
+                answer = messagebox.askquestion('Sobrepor filtro no sistema', f'Tem certeza que deseja sobrescrever o filtro {nome_filtro_atual}?')
+                if answer == 'yes':
+                    filters = filter.Filter.get_filters(self)
+                    for line in filters:
+                        if line[1] == nome_filtro_atual:
+                            filter_id = line[0]
+                            break
+                    filter_lines = get_current_filter_lines(self)  # Define how to get the current filter lines
+                    filter.Filter.edit_filter(self, filter_id, nome_filtro_atual, filter_lines)
+                    reload_combo_box(self)
+
+        def reload_combo_box(self):
+            filter_names = [name for id, name in filter.Filter.load_filters(self)]
+            print(f'List: {filter_names}')
+            self.mainButton_frame.combobox.configure(values = ["Filtro Novo"] + filter_names)
+
+
         """Cria os widgets da aplicação"""
-        self.mainButton_frame = buildWidgets.MainButtonFrame(self)
         self.table_frame = buildWidgets.TableFrame(self, titles=['N° da nota', 'Produto', 'NCM(s)', 'CFOP', 'Descrição'], values=[], height=25)
         self.filter_frame = buildWidgets.FilterFrame(self)
+        self.mainButton_frame = buildWidgets.MainButtonFrame(self)
+
+        reload_combo_box(self)
+        self.toplevel_window = None
 
         self.mainButton_frame.buttons[0].configure(command=lambda: processArchives.ProcessXmls.openXmlFile(self))
         self.mainButton_frame.buttons[1].configure(command=lambda: processArchives.ProcessXmls.reviewXmlFile(self))
-        self.mainButton_frame.buttons[2].configure()
+        self.mainButton_frame.buttons[2].configure(command=lambda: save_button_click_event(self))
 
 
         self.filter_frame.grid(row=0, column=0, padx=40, pady=(20, 0), sticky="WN")
@@ -115,6 +151,8 @@ class App(customtkinter.CTk):
                              font="bold")
         self.style.map('Treeview', background=[("selected", self.table_header_color)])
         self.menu_bar.config(background=self.menu_bar_color, foreground=self.menu_font_color)
+
+
 
     @property
     def menu_bar_color(self):

@@ -1,7 +1,8 @@
 import os
 import xml.etree.ElementTree as ET
-import fileAlteration
 
+
+import fileAlteration
 import databaseOperations
 
 class ProcessXmls:
@@ -39,7 +40,7 @@ class ProcessXmls:
 
             except ET.ParseError:
                 print(f"Erro ao parsear o arquivo {arquivo}")
-        self.db_ops.save_and_close()
+        self.db_ops._save_connection()
         self.table_frame.clean_table()
         self.table_frame.add_item(self.tableData)
 
