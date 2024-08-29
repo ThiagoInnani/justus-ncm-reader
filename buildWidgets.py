@@ -1,9 +1,12 @@
 from tkinter import *
 from tkinter import ttk
 import customtkinter
-
+from PIL import Image
+from PIL import ImageTk
 import pyperclip
+
 import filter
+import processArchives
 
 class TableFrame(customtkinter.CTkFrame):
     def __init__(self, master, titles, values, height):
@@ -106,25 +109,23 @@ class FilterFrame(customtkinter.CTkFrame):
                 self.operation_combo.set(line[4])
                 self.entry.insert(0, line[5]) 
                 index+=1
+        processArchives.ProcessXmls.reviewXmlFile(self.master)
                 
-
-
-
     def add_text_field(self):
         index = len(self.text_fields)
         frame = customtkinter.CTkFrame(self)
         frame.grid(row=index, column=0, pady=5, sticky="ewn")
 
         if index > 0:
-            self.logic_combo = customtkinter.CTkComboBox(frame, values=["E", "OU"], width=50)
+            self.logic_combo = customtkinter.CTkOptionMenu(frame, values=["E", "OU"], width=50)
             self.logic_combo.grid(row=0, column=0, padx=(0, 10))
         else:
             self.logic_combo = None
 
-        self.field_combo = customtkinter.CTkComboBox(frame, values=["N° da nota", "Produto", "NCM(s)", "CFOP", "Descrição"], width=150)
+        self.field_combo = customtkinter.CTkOptionMenu(frame, values=["N° da nota", "Produto", "NCM(s)", "CFOP", "Descrição"], width=150)
         self.field_combo.grid(row=0, column=1, padx=(0, 10))
 
-        self.operation_combo = customtkinter.CTkComboBox(frame, values=["é igual a", "é diferente de", "maior que", "menor que", "contém"], width=150)
+        self.operation_combo = customtkinter.CTkOptionMenu(frame, values=["é igual a", "é diferente de", "maior que", "menor que", "contém"], width=150)
         self.operation_combo.grid(row=0, column=2, padx=(0, 10))
 
         self.entry = customtkinter.CTkEntry(frame, placeholder_text="Valor", width=200)
@@ -178,12 +179,14 @@ class FilterFrame(customtkinter.CTkFrame):
         palavra = self.entry.get()
         self.entry.delete(first_index=0, last_index=len(palavra))
         
-
 class MainButtonFrame(customtkinter.CTkFrame):
     #Esse código feio faz com que quando o usuário seleciona algo na combobox, vá direto pro filter_frame pra inserir os dados
     def combobox_callback(self, choice):
         if choice != 'Filtro Novo':
              self.master.filter_frame.fill_filter(choice)
+        else:
+            self.master.filter_frame.clear_filter()
+            processArchives.ProcessXmls.reviewXmlFile(self.master)
 
     def update_combobox(self):
         self.combobox.configure(values=['Filtro Novo'] + list(filter.Filter.get_filters(self)))
@@ -195,28 +198,44 @@ class MainButtonFrame(customtkinter.CTkFrame):
     
     def __init__(self, master):
         super().__init__(master)
-        self.grid_columnconfigure(0, weight=1)
+        self.grid_columnconfigure((0,2), weight=1)
+        self.grid_columnconfigure(1, weight=3)
 
         self.import_button = customtkinter.CTkButton(self, text="Importar XMLs")
         self.process_button = customtkinter.CTkButton(self, text="Filtrar XMLs")
 
+        clear_filter_image = Image.open('./src/clear_filter.png')
+        clear_filter_image_ctk = customtkinter.CTkImage(light_image=clear_filter_image,
+                                                  dark_image=clear_filter_image,
+                                                  size=(20,20))
+        self.clear_filters_button = customtkinter.CTkButton(self,text="", image=clear_filter_image_ctk, width=20)
+
         #grid
-        self.import_button.grid(row=1, column=0, padx=10, pady=(0, 10), sticky="ew")
-        self.process_button.grid(row=2, column=0, padx=10, pady=(0, 10), sticky="ew")
+        self.import_button.grid(row=1, column=0, columnspan=3, padx=10, pady=(0, 10), sticky="ew")
+        self.process_button.grid(row=2, column=0, columnspan=2, padx=10, pady=(0, 10), sticky="ew")
+        self.clear_filters_button.grid(row=2, column=2, padx=(0, 10), pady=(0, 10), sticky="ew")
+
+        self.clear_filters_button
 
         self.separator = ttk.Separator(self, orient='horizontal')
-        self.separator.grid(row=3, column=0, padx=10, pady=10, sticky="ew")
+        self.separator.grid(row=3, column=0, columnspan=3, padx=10, pady=10, sticky="ew")
         
         self.save_button = customtkinter.CTkButton(self, text="Salvar Filtro Atual")
-        self.save_button.grid(row=4, column=0, padx=10, pady=(0, 10), sticky="ew")
+        self.save_button.grid(row=4, column=0, columnspan=3, padx=10, pady=(0, 10), sticky="ew")
 
+        delete_image = Image.open('./src/delete_icon.png')
+        delete_image_ctk = customtkinter.CTkImage(light_image=delete_image,
+                                                  dark_image=delete_image,
+                                                  size=(20,20))
+        self.delete_filter_button = customtkinter.CTkButton(self,text="", image=delete_image_ctk, width=20, fg_color='#cc0000', hover_color='#8e0000')
+        self.delete_filter_button.grid(row=5, column=0, padx=(10, 0), pady=(0, 10), sticky="ew")
+        
         combobox_var = customtkinter.StringVar(value="Filtro Novo")  # set initial value
-        self.combobox = customtkinter.CTkComboBox(self,
+        self.combobox = customtkinter.CTkOptionMenu(self,
                                      values=['Filtro Novo'],
                                      command=self.combobox_callback,
                                      variable=combobox_var
                                      )
-        
-        self.combobox.grid(row=5, column=0, padx=10, pady=(0, 10), sticky="ew")
+        self.combobox.grid(row=5, column=1, columnspan=2, padx=10, pady=(0, 10), sticky="ew")
 
-        self.buttons = [self.import_button, self.process_button, self.save_button]
+        self.buttons = [self.import_button, self.process_button, self.save_button, self.delete_filter_button, self.clear_filters_button]
