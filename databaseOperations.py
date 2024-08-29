@@ -23,14 +23,12 @@ class DatabaseOperations:
             self.cursor = self.connection.cursor()
             self._select_database()
         except mysql.connector.Error as err:
-            print(f"Erro na conexão com o banco de dados MySQL: {err}")
             return False
         return True
 
     def _select_database(self):
         try:
             self.connection.database = self.database_name
-            print(f"Acessado o banco de dados {self.database_name}")
         except mysql.connector.Error as err:
             if err.errno == errorcode.ER_BAD_DB_ERROR:
                 self._create_database()
@@ -42,10 +40,8 @@ class DatabaseOperations:
     def _create_database(self):
         """Cria o banco de dados se não existir"""
         try:
-            print(f"O banco de dados {self.database_name} não existe. Criando...")
             self.cursor.execute(f"CREATE DATABASE {self.database_name}")
             self.connection.database = self.database_name
-            print(f"Banco de dados {self.database_name} criado e acessado com sucesso")
             self._initialize_database()
         except mysql.connector.Error as err:
             print(f"Erro ao criar o banco de dados: {err}")
@@ -61,14 +57,12 @@ class DatabaseOperations:
                     Descricao TEXT
                 );
                 ''')
-            print('Cursor executou tabela 1 (Nomenclaturas)')
             self.cursor.execute('''
                 CREATE TABLE IF NOT EXISTS Filter (
                     id INT AUTO_INCREMENT PRIMARY KEY,
                     name VARCHAR(255) NOT NULL
                 );
                 ''')
-            print('Cursor executou tabela 2 (Filters)')
             self.cursor.execute('''
                 CREATE TABLE IF NOT EXISTS FilterLine (
                     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -80,7 +74,6 @@ class DatabaseOperations:
                     FOREIGN KEY (filter_id) REFERENCES Filter(id)
                 );
                 ''')
-            print('Cursor executou tabela 3 (FilterLine)')
             print("Tabela 'Nomenclaturas', 'Filters', 'FilterLine' criadas ou já existentes.")
             self._save_connection()
         except mysql.connector.Error as err:

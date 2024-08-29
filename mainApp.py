@@ -24,11 +24,6 @@ class App(customtkinter.CTk):
         self._create_widgets()
         self.interface_creation = interfaceCreation.Interface(self)
 
-    def _setup_window_icon(self):
-        """Configura o ícone da janela"""
-        icon_path = os.path.join(self.pasta_app, 'src/icon.png')
-        self.tk.call('wm', 'iconphoto', self._w, PhotoImage(file=icon_path))
-
     def _setup_grid(self):
         """Configura o layout de grid da janela"""
         self.grid_columnconfigure((0, 1), weight=1)

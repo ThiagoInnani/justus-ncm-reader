@@ -11,11 +11,17 @@ class FileAlteration():
             title='Selecione o diretório',
             initialdir='',
             )
+        
+        if not directory:  # Verifica se o diretório está vazio ou foi cancelado
+            showinfo(
+                title='Aviso',
+                message='Nenhuma pasta selecionada.'
+            )
+            return None
+        
         showinfo(
             title='Pasta selecionada',
             message=directory
         )
-        if directory is None:
-            return
         
         return directory

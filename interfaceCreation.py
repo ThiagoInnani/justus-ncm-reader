@@ -12,11 +12,16 @@ import processArchives
 class Interface:
     def __init__(self, master):
         self.pasta_app = os.path.dirname(__file__)
+        self._setup_window_icon(master)
         self._setup_menu(master)
         self._setup_theme(master)
         self._change_theme(master)
 
-    
+    def _setup_window_icon(self, master):
+        """Configura o ícone da janela"""
+        icon_path = os.path.join(self.pasta_app, 'src/icon.png')
+        master.tk.call('wm', 'iconphoto', master._w, PhotoImage(file=icon_path))
+
     def _setup_menu(self, master):
         """Configura a barra de menus"""
         self.menu_bar = Menu(master)
@@ -47,7 +52,6 @@ class Interface:
         
     def _change_theme(self, master):
         """Alterna entre os temas claro e escuro"""
-        print("Chegou em change theme")
         self.theme = 1 - self.theme
         customtkinter.set_appearance_mode("dark" if self.theme == 1 else "light")
         self._apply_theme(master)

@@ -180,7 +180,6 @@ class FilterFrame(customtkinter.CTkFrame):
         self.entry.delete(first_index=0, last_index=len(palavra))
         
 class MainButtonFrame(customtkinter.CTkFrame):
-    #Esse código feio faz com que quando o usuário seleciona algo na combobox, vá direto pro filter_frame pra inserir os dados
     def combobox_callback(self, choice):
         if choice != 'Filtro Novo':
              self.master.filter_frame.fill_filter(choice)
