@@ -99,7 +99,7 @@ class App(customtkinter.CTk):
             self.mainButton_frame.combobox.configure(values = ["Filtro Novo"] + filter_names)
 
         """Cria os widgets da aplicação"""
-        self.table_frame = buildWidgets.TableFrame(self, titles=['N° da nota', 'Produto', 'NCM(s)', 'CFOP', 'Descrição'], values=[], height=25)
+        self.table_frame = buildWidgets.TableFrame(self, titles=['N° da nota', 'Produto', 'NCM(s)', 'CFOP', 'CST/CSOSN', 'Descrição'], values=[], height=25)
         self.filter_frame = buildWidgets.FilterFrame(self)
         self.mainButton_frame = buildWidgets.MainButtonFrame(self)
 

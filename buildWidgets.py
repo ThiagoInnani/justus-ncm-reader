@@ -23,7 +23,7 @@ class TableFrame(customtkinter.CTkFrame):
         self.tree = ttk.Treeview(self, column=self.titles, show='headings', height=self.height)
 
         for i in range(len(self.titles)):
-            self.tree.column("# "+str(i+1), anchor=CENTER, width=600 if i==4 else 100)
+            self.tree.column("# "+str(i+1), anchor=CENTER, width=600 if i==5 else 100)
             self.tree.heading("# "+str(i+1), text=self.titles[i])
         
         # Insert the data in Treeview widget
@@ -122,7 +122,7 @@ class FilterFrame(customtkinter.CTkFrame):
         else:
             self.logic_combo = None
 
-        self.field_combo = customtkinter.CTkOptionMenu(frame, values=["N° da nota", "Produto", "NCM(s)", "CFOP", "Descrição"], width=150)
+        self.field_combo = customtkinter.CTkOptionMenu(frame, values=["N° da nota", "Produto", "NCM(s)", "CFOP", "CST/CSOSN", "Descrição"], width=150)
         self.field_combo.grid(row=0, column=1, padx=(0, 10))
 
         self.operation_combo = customtkinter.CTkOptionMenu(frame, values=["é igual a", "é diferente de", "maior que", "menor que", "contém"], width=150)
@@ -216,8 +216,8 @@ class MainButtonFrame(customtkinter.CTkFrame):
 
         self.clear_filters_button
 
-        self.separator = ttk.Separator(self, orient='horizontal')
-        self.separator.grid(row=3, column=0, columnspan=3, padx=10, pady=10, sticky="ew")
+        self.separatorUp = ttk.Separator(self, orient='horizontal')
+        self.separatorUp.grid(row=3, column=0, columnspan=3, padx=10, pady=10, sticky="ew")
         
         self.save_button = customtkinter.CTkButton(self, text="Salvar Filtro Atual")
         self.save_button.grid(row=4, column=0, columnspan=3, padx=10, pady=(0, 10), sticky="ew")
@@ -236,5 +236,11 @@ class MainButtonFrame(customtkinter.CTkFrame):
                                      variable=combobox_var
                                      )
         self.combobox.grid(row=5, column=1, columnspan=2, padx=10, pady=(0, 10), sticky="ew")
+
+        self.separatorDown = ttk.Separator(self, orient='horizontal')
+        self.separatorDown.grid(row=6, column=0, columnspan=3, padx=10, pady=10, sticky="ew")
+
+        self.analyzer = customtkinter.CTkButton(self, text="Analisador")
+        self.analyzer.grid(row=7, column=0, columnspan=3, padx=10, pady=(0, 10), sticky="ew")
 
         self.buttons = [self.import_button, self.process_button, self.save_button, self.delete_filter_button, self.clear_filters_button]

@@ -30,13 +30,16 @@ class ProcessXmls:
                 xproduct_list = [xproduct.text for xproduct in root.findall('.//xProd', ns)]
                 cfop_list = [cfop.text for cfop in root.findall('.//CFOP', ns)]
                 ncm_list = [ncm.text for ncm in root.findall('.//NCM', ns)]
-                
+                csosn_list = [csosn.text for csosn in root.findall('.//CSOSN', ns)]
+                cst_list = [produto.find('.//CST', ns).text for produto in root.findall('.//det', ns) if produto.find('.//CST', ns) is not None]
+
                 for i in range(len(ncm_list)):
                     xproduct = xproduct_list[i] if i < len(xproduct_list) else ''
                     cfop = cfop_list[i] if i < len(cfop_list) else ''
+                    csosn_cst = csosn_list[i] if csosn_list else cst_list[i]
                     ncm = ncm_list[i]
                     descricao_ncm = ProcessXmls.get_ncm_description(self, ncm)
-                    self.tableData.append([nota_num.text, xproduct, ncm, cfop, descricao_ncm])
+                    self.tableData.append([nota_num.text, xproduct, ncm, cfop, csosn_cst, descricao_ncm])
 
             except ET.ParseError:
                 print(f"Erro ao parsear o arquivo {arquivo}")
@@ -46,7 +49,7 @@ class ProcessXmls:
 
     def get_ncm_description(self, ncm_code):
         
-        query = f"SELECT description FROM Nomenclaturas WHERE Codigo = '{ncm_code}'"
+        query = f"SELECT description FROM Nomenclaturas WHERE id = '{ncm_code}'"
         result = self.db_ops.execute_command(query)
 
         return result[0][0] if result else 'Descrição não encontrada'
@@ -69,7 +72,7 @@ class ProcessXmls:
             return False
 
         def apply_filter(row, field, operation, value):
-            fields = ["N° da nota", "Produto", "NCM(s)", "CFOP", "Descrição"]
+            fields = ["N° da nota", "Produto", "NCM(s)", "CFOP", "CST/CSOSN", "Descrição"]
             index = fields.index(field)
             return compare(row[index], operation, value)
 
