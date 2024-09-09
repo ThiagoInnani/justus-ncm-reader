@@ -37,9 +37,13 @@ class App(customtkinter.CTk):
             self.db_ops._initialize_database()
             #Confere se existe uma tabela Nomenclaturas preenchida
             count = self.db_ops.execute_command("SELECT COUNT(*) FROM Nomenclaturas")
-            db_ncm = databaseOperations.DatabaseNcm(self.db_ops)
+            db_fill = databaseOperations.DatabaseFill(self.db_ops)
             if count[0][0] == 0:
-                db_ncm.insert_ncm_in_table()
+                db_fill.insert_ncm_in_table()
+                db_fill.insert_cst_in_table()
+                db_fill.insert_csosn_in_table()
+                db_fill.insert_uf_in_table()
+                db_fill.insert_cfop_in_table()
             db_filter = filter.Filter(self.db_ops)
     
     def _create_widgets(self):

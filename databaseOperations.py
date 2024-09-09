@@ -1,4 +1,5 @@
 import json
+import csv
 import mysql.connector
 from mysql.connector import errorcode
 from ncm.client import FetchNcm
@@ -49,20 +50,20 @@ class DatabaseOperations:
             exit(1)
 
     def _initialize_database(self):
-        """Inicializa a tabela 'Nomenclaturas'"""
+        """Inicializa as tabelas no banco de dados"""
         try:
             self.cursor.execute('''
                 CREATE TABLE IF NOT EXISTS Nomenclaturas (
-                    Codigo VARCHAR(50),
-                    Descricao TEXT
+                    id VARCHAR(50),
+                    description TEXT
                 );
-                ''')
+            ''')
             self.cursor.execute('''
                 CREATE TABLE IF NOT EXISTS Filter (
                     id INT AUTO_INCREMENT PRIMARY KEY,
                     name VARCHAR(255) NOT NULL
                 );
-                ''')
+            ''')
             self.cursor.execute('''
                 CREATE TABLE IF NOT EXISTS FilterLine (
                     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -70,16 +71,55 @@ class DatabaseOperations:
                     logical_operator VARCHAR(10),
                     field VARCHAR(255),
                     operation VARCHAR(10),
-                    value VARCHAR(255),
+                    value VARCHAR(255) NOT NULL,
                     FOREIGN KEY (filter_id) REFERENCES Filter(id)
                 );
-                ''')
-            print("Tabela 'Nomenclaturas', 'Filters', 'FilterLine' criadas ou já existentes.")
+            ''')
+            self.cursor.execute('''
+                CREATE TABLE IF NOT EXISTS CFOP (
+                    id VARCHAR(4) PRIMARY KEY,
+                    description TEXT
+                );
+            ''')
+            self.cursor.execute('''
+                CREATE TABLE IF NOT EXISTS CST (
+                    id VARCHAR(2) PRIMARY KEY,
+                    description TEXT
+                );
+            ''')
+            self.cursor.execute('''
+                CREATE TABLE IF NOT EXISTS CSOSN (
+                    id VARCHAR(3) PRIMARY KEY,
+                    description TEXT
+                );
+            ''')
+            self.cursor.execute('''
+                CREATE TABLE IF NOT EXISTS FederativeUnits (
+                    id VARCHAR(2) PRIMARY KEY,
+                    state_name VARCHAR(30)
+                );
+            ''')
+            self.cursor.execute('''
+                CREATE TABLE IF NOT EXISTS BaseIcms (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    value FLOAT NOT NULL,
+                    cfop_id VARCHAR(4) NOT NULL,
+                    cst_id VARCHAR(2),
+                    csosn_id VARCHAR(3),
+                    federative_unit_id VARCHAR(2),
+                    FOREIGN KEY (cfop_id) REFERENCES CFOP(id),
+                    FOREIGN KEY (cst_id) REFERENCES CST(id),
+                    FOREIGN KEY (csosn_id) REFERENCES CSOSN(id),
+                    FOREIGN KEY (federative_unit_id) REFERENCES FederativeUnits(id)
+                );
+            ''')
+            print("Tabelas criadas ou já existentes.")
             self._save_connection()
         except mysql.connector.Error as err:
             print(f"Erro ao criar a tabela: {err}")
             self._close_connection()
             exit(1)
+
 
     def _save_connection(self):
         """Salva as mudanças e fecha a conexão"""
@@ -108,8 +148,7 @@ class DatabaseOperations:
             self.connection.close()
             print("Conexão com banco fechada")
 
-
-class DatabaseNcm:
+class DatabaseFill:
     def __init__(self, db_operations):
         self.db_operations = db_operations
 
@@ -128,10 +167,10 @@ class DatabaseNcm:
         try:
             for nomenclatura in data['Nomenclaturas']:
                 codigo_sem_pontos = nomenclatura['Codigo'].replace('.', '')
-                descricao_corrigida = DatabaseNcm.replace_multiple(nomenclatura['Descricao'], ['-', '<i>', '</i>'])
+                descricao_corrigida = DatabaseFill.replace_multiple(nomenclatura['Descricao'], ['-', '<i>', '</i>'])
 
                 self.db_operations.cursor.execute('''
-                    INSERT INTO Nomenclaturas (Codigo, Descricao)
+                    INSERT INTO Nomenclaturas (id, description)
                     VALUES (%s, %s)
                 ''', (codigo_sem_pontos, descricao_corrigida))
             self.db_operations._save_connection()
@@ -144,4 +183,46 @@ class DatabaseNcm:
             text = text.replace(word, "")
         return text
 
+    def insert_cst_in_table(self):
+        with open("./data/CST.csv", "r") as file:
+            reader = csv.reader(file)
 
+            for row in reader:
+                self.db_operations.cursor.execute('''
+                INSERT INTO CST (id, description)
+                VALUES (%s, %s)
+                ''', row)
+        self.db_operations._save_connection()
+        
+    def insert_csosn_in_table(self):
+        with open("./data/CSOSN.csv", "r") as file:
+            reader = csv.reader(file)
+
+            for row in reader:
+                self.db_operations.cursor.execute('''
+                INSERT INTO CSOSN (id, description)
+                VALUES (%s, %s)
+                ''', row)
+        self.db_operations._save_connection()
+
+    def insert_uf_in_table(self):
+        with open("./data/UF.csv", "r") as file:
+            reader = csv.reader(file)
+
+            for row in reader:
+                self.db_operations.cursor.execute('''
+                INSERT INTO FederativeUnits (id, state_name)
+                VALUES (%s, %s)
+                ''', row)
+        self.db_operations._save_connection()
+    
+    def insert_cfop_in_table(self):
+        with open("./data/CFOP.csv", "r") as file:
+            reader = csv.reader(file, delimiter=";")
+
+            for row in reader:
+                self.db_operations.cursor.execute('''
+                INSERT INTO CFOP (id, description)
+                VALUES (%s, %s)
+                ''', row)
+        self.db_operations._save_connection()    

@@ -46,7 +46,7 @@ class ProcessXmls:
 
     def get_ncm_description(self, ncm_code):
         
-        query = f"SELECT Descricao FROM Nomenclaturas WHERE Codigo = '{ncm_code}'"
+        query = f"SELECT description FROM Nomenclaturas WHERE Codigo = '{ncm_code}'"
         result = self.db_ops.execute_command(query)
 
         return result[0][0] if result else 'Descrição não encontrada'
