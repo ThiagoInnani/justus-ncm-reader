@@ -17,8 +17,10 @@ class App(customtkinter.CTk):
 
     def __init__(self):
         super().__init__()
+        self.toplevel_window = None
         self.title("Filtrador de NCMs Justus")
         self.geometry("1200x800")
+        self.minsize(990, 830)
         self._setup_grid()
         self._connect_database()
         self._create_widgets()

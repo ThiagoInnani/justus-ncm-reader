@@ -7,7 +7,7 @@ import os
 
 #Classes
 import processArchives
-
+import baseIcms
 
 class Interface:
     def __init__(self, master):
@@ -26,6 +26,7 @@ class Interface:
         """Configura a barra de menus"""
         self.menu_bar = Menu(master)
         self._create_file_menu(master)
+        self._create_base_icms(master)
         self._create_options_menu(master)
         master.config(menu=self.menu_bar)
 
@@ -36,6 +37,12 @@ class Interface:
         file_menu.add_separator()
         file_menu.add_command(label="Fechar", command=master.quit)
         self.menu_bar.add_cascade(label="Arquivos", menu=file_menu)
+
+    def _create_base_icms(self, master):
+        """Cria o menu de Bases de ICMS"""
+        icms_menu = Menu(self.menu_bar, tearoff=0)
+        icms_menu.add_command(label="Cadastrar Base de ICMS", command= lambda: self.open_toplevel_base_icms(master))
+        self.menu_bar.add_cascade(label="Cadastrar", menu=icms_menu)
 
     def _create_options_menu(self, master):
         """Cria o menu Opções"""
@@ -70,6 +77,12 @@ class Interface:
                              font="bold")
         master.style.map('Treeview', background=[("selected", self.table_header_color)])
         self.menu_bar.config(background=self.menu_bar_color, foreground=self.menu_font_color)
+    
+    def open_toplevel_base_icms(self, master):
+        if master.toplevel_window is None or not master.toplevel_window.winfo_exists():
+            master.toplevel_window = baseIcms.BaseICMS(master)  # create window if its None or destroyed
+        else:
+            master.toplevel_window.focus()  # if window exists focus it
 
     @property
     def menu_bar_color(self):
