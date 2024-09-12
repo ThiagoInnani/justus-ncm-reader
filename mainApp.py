@@ -92,16 +92,15 @@ class App(customtkinter.CTk):
                     reload_combo_box(self)
                     self.mainButton_frame.combobox.set("Filtro Novo")
             else:
-                messagebox.showerror('Tela de Erro', f'Erro: não é possível excluir o filtro {nome_filtro_atual}')
-
-
+                messagebox.showerror('ERRO: filtro não excluível', f'ERRO: não é possível excluir o filtro {nome_filtro_atual}')            
+        
         def reload_combo_box(self):
             filter_names = [name for id, name in filter.Filter.load_filters(self)]
             print(f'List: {filter_names}')
             self.mainButton_frame.combobox.configure(values = ["Filtro Novo"] + filter_names)
 
         """Cria os widgets da aplicação"""
-        self.table_frame = buildWidgets.TableFrame(self, titles=['N° da nota', 'Produto', 'NCM(s)', 'CFOP', 'CST/CSOSN', 'Descrição'], values=[], height=25)
+        self.table_frame = buildWidgets.TableFrame(self, titles=['N° da nota', 'Produto', 'NCM(s)', 'CFOP', 'CST/CSOSN', 'Descrição', 'Status'], values=[], height=25)
         self.filter_frame = buildWidgets.FilterFrame(self)
         self.mainButton_frame = buildWidgets.MainButtonFrame(self)
 
@@ -113,6 +112,7 @@ class App(customtkinter.CTk):
         self.mainButton_frame.buttons[2].configure(command=lambda: save_button_click_event(self))
         self.mainButton_frame.buttons[3].configure(command=lambda: delete_button_click_event(self))
         self.mainButton_frame.buttons[4].configure(command=lambda: self.filter_frame.clear_filter())
+        self.mainButton_frame.buttons[5].configure(command=lambda: processArchives.ProcessXmls.analyze_button_click_event(self))
 
         self.filter_frame.grid(row=0, column=0, padx=40, pady=(20, 0), sticky="WN")
         self.mainButton_frame.grid(row=0, column=1, padx=(40, 0), pady=(20, 0), sticky="NEW")

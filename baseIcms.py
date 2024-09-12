@@ -95,38 +95,20 @@ class BaseICMS(customtkinter.CTkToplevel):
         return [item[0] for item in filtered_data]
     
     def comboboxes_callback(self, event):
-        db_ops = databaseOperations.DatabaseOperations()
-
         ncm_value = self.ncm_combobox.get()
         uf_value = self.uf_combobox.get()
         cst_csosn_value = self.cst_csosn_combobox.get()
         cfop_value = self.cfop_combobox.get()
 
-        db_ops.connect_to_database()
+        base_icms_value = BaseICMS.get_base_icms(ncm_value, cfop_value, uf_value, cst_csosn_value)
 
-        cst = True if len(cst_csosn_value) == 2 else False
-        if cst:
-            query = f'''SELECT value FROM BaseIcms 
-            WHERE nomenclatura_id={ncm_value} 
-            AND cfop_id={cfop_value} 
-            AND federative_unit_id="{uf_value}" 
-            AND cst_id={cst_csosn_value}'''
-        else:
-            query = f'''SELECT value FROM BaseIcms 
-            WHERE nomenclatura_id={ncm_value} 
-            AND cfop_id={cfop_value} 
-            AND federative_unit_id="{uf_value}" 
-            AND csosn_id={cst_csosn_value}'''
-        filtered_data = db_ops.execute_command(query)
-        db_ops._close_connection
-
-        print(f'NCM: {ncm_value}, CFOP: {cfop_value}, UF: {uf_value}, CST/CSOSN: {cst_csosn_value}, ICMS: {filtered_data}')
+        print(f'NCM: {ncm_value}, CFOP: {cfop_value}, UF: {uf_value}, CST/CSOSN: {cst_csosn_value}, ICMS: {base_icms_value}')
         
         word = self.taxrate_entry.get()
         self.taxrate_entry.delete(first_index=0, last_index=len(word))
         
-        if filtered_data:
-            self.taxrate_entry.insert(0, filtered_data)
+        if base_icms_value:
+            self.taxrate_entry.insert(0, base_icms_value)
 
         self.validate_data()
 
@@ -172,6 +154,7 @@ class BaseICMS(customtkinter.CTkToplevel):
                 VALUES ({icms_value}, '{ncm_value}', '{cfop_value}', '{cst_csosn_value}', '{uf_value}')'''
             db_ops.execute_command(query)
             db_ops._save_connection()
+            messagebox.showinfo('Base de ICMS salva', f'A base de ICMS foi salva com sucesso.', parent=self)
          
         db_ops = databaseOperations.DatabaseOperations()
          
@@ -181,24 +164,12 @@ class BaseICMS(customtkinter.CTkToplevel):
         cst_csosn_value = self.cst_csosn_combobox.get()
         cfop_value = self.cfop_combobox.get()
 
-        db_ops.connect_to_database()
-        #Define se é CST ou CSOSN
         cst = True if len(cst_csosn_value) == 2 else False
-        if cst:
-           query = f'''SELECT value FROM BaseIcms 
-           WHERE nomenclatura_id={ncm_value} 
-           AND cfop_id={cfop_value} 
-           AND federative_unit_id="{uf_value}" 
-           AND cst_id={cst_csosn_value}'''
-        else:
-           query = f'''SELECT value FROM BaseIcms 
-           WHERE nomenclatura_id={ncm_value} 
-           AND cfop_id={cfop_value} 
-           AND federative_unit_id="{uf_value}" 
-           AND csosn_id={cst_csosn_value}'''
-        filtered_data = db_ops.execute_command(query)
+        db_ops.connect_to_database()
+        filtered_data = BaseICMS.get_base_icms(ncm_value, cfop_value, uf_value, cst_csosn_value)
+
         if filtered_data:
-           answer = messagebox.askquestion('SOBRESCREVER BASE DE ICMS', f'Tem certeza que deseja sobrescrever essa base de ICMS?')
+           answer = messagebox.askquestion('SOBRESCREVER BASE DE ICMS', f'Tem certeza que deseja sobrescrever essa base de ICMS?', parent=self)
            if answer == 'yes':
                 if cst:
                     db_ops.execute_command(f'''DELETE FROM BaseIcms 
@@ -217,10 +188,8 @@ class BaseICMS(customtkinter.CTkToplevel):
             insert_into_db()
         db_ops._close_connection()
 
-
-
     def delete_base_icms(self):
-         answer = messagebox.askquestion('EXCLUIR BASE DE ICMS', f'Tem certeza que deseja excluir essa base de ICMS?')
+         answer = messagebox.askquestion('EXCLUIR BASE DE ICMS', f'Tem certeza que deseja excluir essa base de ICMS?', parent=self)
          if answer == 'yes':
             db_ops = databaseOperations.DatabaseOperations()
 
@@ -254,6 +223,27 @@ class BaseICMS(customtkinter.CTkToplevel):
             db_ops._close_connection()
             self.comboboxes_callback(0)
 
+    def get_base_icms(ncm_value, cfop_value, uf_value, cst_csosn_value):
+        db_ops = databaseOperations.DatabaseOperations()
+        cst = True if len(cst_csosn_value) == 2 else False
+        db_ops.connect_to_database()
+
+        if cst:
+            query = f'''SELECT value FROM BaseIcms 
+            WHERE nomenclatura_id={ncm_value} 
+            AND cfop_id={cfop_value} 
+            AND federative_unit_id="{uf_value}" 
+            AND cst_id={cst_csosn_value}'''
+        else:
+            query = f'''SELECT value FROM BaseIcms 
+            WHERE nomenclatura_id={ncm_value} 
+            AND cfop_id={cfop_value} 
+            AND federative_unit_id="{uf_value}" 
+            AND csosn_id={cst_csosn_value}'''
+
+        filtered_data = db_ops.execute_command(query)
+        db_ops._close_connection
+        return filtered_data
 
 class BaseIcmsButtonsFrame(customtkinter.CTkFrame):
     def __init__(self, master):

@@ -23,7 +23,7 @@ class TableFrame(customtkinter.CTkFrame):
         self.tree = ttk.Treeview(self, column=self.titles, show='headings', height=self.height)
 
         for i in range(len(self.titles)):
-            self.tree.column("# "+str(i+1), anchor=CENTER, width=600 if i==5 else 100)
+            self.tree.column("# "+str(i+1), anchor=CENTER, width=500 if i==5 else 150 if i==6 else 100)
             self.tree.heading("# "+str(i+1), text=self.titles[i])
         
         # Insert the data in Treeview widget
@@ -243,4 +243,4 @@ class MainButtonFrame(customtkinter.CTkFrame):
         self.analyzer = customtkinter.CTkButton(self, text="Analisador")
         self.analyzer.grid(row=7, column=0, columnspan=3, padx=10, pady=(0, 10), sticky="ew")
 
-        self.buttons = [self.import_button, self.process_button, self.save_button, self.delete_filter_button, self.clear_filters_button]
+        self.buttons = [self.import_button, self.process_button, self.save_button, self.delete_filter_button, self.clear_filters_button, self.analyzer]
