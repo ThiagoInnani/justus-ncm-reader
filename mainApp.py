@@ -19,8 +19,8 @@ class App(customtkinter.CTk):
         super().__init__()
         self.toplevel_window = None
         self.title("Filtrador de NCMs Justus")
-        self.geometry("1200x800")
-        self.minsize(990, 830)
+        self.geometry("1200x850")
+        self.minsize(1200, 850)
         self._setup_grid()
         self._connect_database()
         self._create_widgets()
@@ -99,6 +99,9 @@ class App(customtkinter.CTk):
             print(f'List: {filter_names}')
             self.mainButton_frame.combobox.configure(values = ["Filtro Novo"] + filter_names)
 
+        def switch_button_click_event(self):
+            processArchives.ProcessXmls.cfop_swap(self)
+
         """Cria os widgets da aplicação"""
         self.table_frame = buildWidgets.TableFrame(self, titles=['N° da nota', 'Produto', 'NCM(s)', 'CFOP', 'CST/CSOSN', 'Descrição', 'Status'], values=[], height=25)
         self.filter_frame = buildWidgets.FilterFrame(self)
@@ -113,6 +116,7 @@ class App(customtkinter.CTk):
         self.mainButton_frame.buttons[3].configure(command=lambda: delete_button_click_event(self))
         self.mainButton_frame.buttons[4].configure(command=lambda: self.filter_frame.clear_filter())
         self.mainButton_frame.buttons[5].configure(command=lambda: processArchives.ProcessXmls.analyze_button_click_event(self))
+        self.mainButton_frame.buttons[6].configure(command=lambda: switch_button_click_event(self))
 
         self.filter_frame.grid(row=0, column=0, padx=40, pady=(20, 0), sticky="WN")
         self.mainButton_frame.grid(row=0, column=1, padx=(40, 0), pady=(20, 0), sticky="NEW")

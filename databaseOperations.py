@@ -78,6 +78,7 @@ class DatabaseOperations:
             self.cursor.execute('''
                 CREATE TABLE IF NOT EXISTS CFOP (
                     id VARCHAR(4) PRIMARY KEY,
+                    equivalent VARCHAR(4) NOT NULL,
                     description TEXT
                 );
             ''')
@@ -224,7 +225,7 @@ class DatabaseFill:
 
             for row in reader:
                 self.db_operations.cursor.execute('''
-                INSERT INTO CFOP (id, description)
-                VALUES (%s, %s)
+                INSERT INTO CFOP (id, equivalent, description)
+                VALUES (%s, %s, %s)
                 ''', row)
         self.db_operations._save_connection()    

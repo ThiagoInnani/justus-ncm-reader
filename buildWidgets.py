@@ -23,7 +23,7 @@ class TableFrame(customtkinter.CTkFrame):
         self.tree = ttk.Treeview(self, column=self.titles, show='headings', height=self.height)
 
         for i in range(len(self.titles)):
-            self.tree.column("# "+str(i+1), anchor=CENTER, width=500 if i==5 else 150 if i==6 else 100)
+            self.tree.column("# "+str(i+1), anchor=CENTER, width=450 if i==5 else 200 if i==6 else 100)
             self.tree.heading("# "+str(i+1), text=self.titles[i])
         
         # Insert the data in Treeview widget
@@ -66,16 +66,16 @@ class TableFrame(customtkinter.CTkFrame):
         for selected_item in selected_items:          
             self.tree.delete(selected_item)
 
+    def add_item(self, values):
+        for i in range(len(values)):
+            self.tree.insert('', 'end', text=i+1, values=values[i])
+
     def get_tree(self, index):
         values = []
         for item in self.tree.get_children():
             values.append(self.tree.item(item, "values")[index].rstrip(","))
-        print("Values: ",values)
+        #print("Values: ",values)
         return values
-
-    def add_item(self, values):
-        for i in range(len(values)):
-            self.tree.insert('', 'end', text=i+1, values=values[i])
 
 class FilterFrame(customtkinter.CTkFrame):
     def __init__(self, master):
@@ -243,4 +243,15 @@ class MainButtonFrame(customtkinter.CTkFrame):
         self.analyzer = customtkinter.CTkButton(self, text="Analisador")
         self.analyzer.grid(row=7, column=0, columnspan=3, padx=10, pady=(0, 10), sticky="ew")
 
-        self.buttons = [self.import_button, self.process_button, self.save_button, self.delete_filter_button, self.clear_filters_button, self.analyzer]
+        self.entries_label = customtkinter.CTkLabel(self, text="Entradas", font=("Arial", 16))
+        self.equivalent_switch = customtkinter.CTkSwitch(self, text="", onvalue='on', offvalue='off', 
+                                                         switch_width=50, switch_height=20
+                                                        )
+        self.exits_label = customtkinter.CTkLabel(self, text="Saídas", font=("Arial", 16))
+        
+        self.entries_label.grid(row=8, column=0, columnspan=1, padx=(10, 90), pady=(0,10), sticky="ew")
+        self.equivalent_switch.grid(row=8, column=1, columnspan=1, padx=10, pady=(0,10), sticky="ew")
+        self.exits_label.grid(row=8, column=2, padx=10, pady=(0,10), sticky="ew")
+
+        self.buttons = [self.import_button, self.process_button, self.save_button, self.delete_filter_button,
+                         self.clear_filters_button, self.analyzer, self.equivalent_switch]

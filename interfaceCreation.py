@@ -8,6 +8,7 @@ import os
 #Classes
 import processArchives
 import baseIcms
+import cfopEquivalent
 
 class Interface:
     def __init__(self, master):
@@ -26,7 +27,7 @@ class Interface:
         """Configura a barra de menus"""
         self.menu_bar = Menu(master)
         self._create_file_menu(master)
-        self._create_base_icms(master)
+        self._create_registry_menu(master)
         self._create_options_menu(master)
         master.config(menu=self.menu_bar)
 
@@ -38,10 +39,11 @@ class Interface:
         file_menu.add_command(label="Fechar", command=master.quit)
         self.menu_bar.add_cascade(label="Arquivos", menu=file_menu)
 
-    def _create_base_icms(self, master):
+    def _create_registry_menu(self, master):
         """Cria o menu de Bases de ICMS"""
         icms_menu = Menu(self.menu_bar, tearoff=0)
         icms_menu.add_command(label="Cadastrar Base de ICMS", command= lambda: self.open_toplevel_base_icms(master))
+        icms_menu.add_command(label="Cadastrar CFOP", command= lambda: self.open_toplevel_cfop(master))
         self.menu_bar.add_cascade(label="Cadastrar", menu=icms_menu)
 
     def _create_options_menu(self, master):
@@ -81,6 +83,12 @@ class Interface:
     def open_toplevel_base_icms(self, master):
         if master.toplevel_window is None or not master.toplevel_window.winfo_exists():
             master.toplevel_window = baseIcms.BaseICMS(master)  # create window if its None or destroyed
+        else:
+            master.toplevel_window.focus()  # if window exists focus it
+    
+    def open_toplevel_cfop(self, master):
+        if master.toplevel_window is None or not master.toplevel_window.winfo_exists():
+            master.toplevel_window = cfopEquivalent.CFOPEquivalent(master)  # create window if its None or destroyed
         else:
             master.toplevel_window.focus()  # if window exists focus it
 
