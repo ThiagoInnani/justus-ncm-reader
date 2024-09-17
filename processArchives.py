@@ -13,6 +13,7 @@ class ProcessXmls:
         super().__init__()
         self.tableData = []
         self.filtered_data = []
+        self.switch_changes = 0
         self.db_ops = databaseOperations.DatabaseOperations()
 
     def openXmlFile(self):
@@ -40,7 +41,7 @@ class ProcessXmls:
                 picms_list = [produto.find('.//pICMS', ns).text if produto.find('.//pICMS', ns) is not None else '0' for produto in root.findall('.//det', ns)]
                 # Busca a UF no bloco 'dest' ou 'enderEmit' se não encontrar
                 uf_list = root.find('.//dest//UF', ns)
-
+                print(f'picms: {picms_list}')
                 # Se não encontrar no 'dest', busca no 'enderEmit'
                 if uf_list is None:
                     uf_list = root.find('.//enderEmit//UF', ns)
@@ -55,7 +56,7 @@ class ProcessXmls:
                     csosn_cst = csosn_list[i] if csosn_list else cst_list[i]
                     ncm = ncm_list[i]
                     descricao_ncm = ProcessXmls.get_ncm_description(self, ncm)
-                    picms = cst_list[i] if i < len(picms_list) else ''
+                    picms = picms_list[i] if i < len(picms_list) else ''
                     uf = uf_list_text if uf_list_text else ''
                     status = ''
 
@@ -126,15 +127,14 @@ class ProcessXmls:
             print(f'index: {i}')
             picms = support[0]  # Obtém o valor picms da lista support_data
             ncm_value = row[2]  # Assumindo que NCM está na coluna 2
-            cfop_value = row[3]  # Assumindo que CFOP está na coluna 3
             uf_value = support[1]  # Obtém o valor uf da lista support_data
             cst_csosn_value = row[4]  # Assumindo que CST/CSOSN está na coluna 4
             status = ""
 
             # Processa e compara os dados como antes
             picms = float(picms)
-            print(f'PICMS: {picms}, NCM: {ncm_value}, CFOP: {cfop_value}, UF: {uf_value}, CST/CSOSN: {cst_csosn_value}')
-            db_base_icms = baseIcms.BaseICMS.get_base_icms(ncm_value, cfop_value, uf_value, cst_csosn_value)
+            print(f'PICMS: {picms}, NCM: {ncm_value}, UF: {uf_value}, CST/CSOSN: {cst_csosn_value}')
+            db_base_icms = baseIcms.BaseICMS.get_base_icms(ncm_value, uf_value, cst_csosn_value)
 
             print(f'DB_BASE_ICMS_ANTES: {db_base_icms}')
             var_aux = 0
@@ -169,7 +169,6 @@ class ProcessXmls:
     def cfop_swap(self):
         cfop_list = self.table_frame.get_tree(3)
         print(f'Tree(3): {cfop_list}')
-
         if cfop_list:
             cfop_equivalent = cfopEquivalent.CFOPEquivalent.get_cfop_equivalent(self, cfop_list)
             for i, row in enumerate(self.filtered_data):
@@ -178,19 +177,29 @@ class ProcessXmls:
             cfop_table_data = []
             for i, row in enumerate(self.tableData):
                 cfop_table_data.append(row[3])
-
             cfop_table_data_equivalent = cfopEquivalent.CFOPEquivalent.get_cfop_equivalent(self, cfop_table_data)
             for i, row in enumerate(self.tableData):
                 row[3] = cfop_table_data_equivalent[i]
             '''
             self.table_frame.clean_table()
             self.table_frame.add_item(self.filtered_data) 
+            self.switch_changes = 1
         else:
             messagebox.showerror('ERRO: Tabela sem dados', 'ERRO: Sem dados na tabela para filtrar')
             self.mainButton_frame.buttons[6].deselect()
-        
+            
         status_list = self.table_frame.get_tree(6)
         if status_list[0] != "":
             ProcessXmls.analyze_button_click_event(self)
-
+        '''
+        cfop_table_data = []
+        for i, row in enumerate(self.tableData):
+            cfop_table_data.append(row[3])
+        for i, row in enumerate(self.filtered_data):
+            row[3] = cfop_table_data[i]
+        self.table_frame.clean_table()
+        self.table_frame.add_item(self.filtered_data)
+        self.switch_changes = 0 
+        '''
+            
             

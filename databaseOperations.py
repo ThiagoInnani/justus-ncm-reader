@@ -84,7 +84,7 @@ class DatabaseOperations:
             ''')
             self.cursor.execute('''
                 CREATE TABLE IF NOT EXISTS CST (
-                    id VARCHAR(2) PRIMARY KEY,
+                    id VARCHAR(3) PRIMARY KEY,
                     description TEXT
                 );
             ''')
@@ -105,12 +105,10 @@ class DatabaseOperations:
                     id INT AUTO_INCREMENT PRIMARY KEY,
                     value FLOAT NOT NULL,
                     nomenclatura_id VARCHAR(8) NOT NULL,
-                    cfop_id VARCHAR(4) NOT NULL,
-                    cst_id VARCHAR(2),
+                    cst_id VARCHAR(3),
                     csosn_id VARCHAR(3),
                     federative_unit_id VARCHAR(2) NOT NULL,
                     FOREIGN KEY (nomenclatura_id) REFERENCES Nomenclaturas(id),
-                    FOREIGN KEY (cfop_id) REFERENCES CFOP(id),
                     FOREIGN KEY (cst_id) REFERENCES CST(id),
                     FOREIGN KEY (csosn_id) REFERENCES CSOSN(id),
                     FOREIGN KEY (federative_unit_id) REFERENCES FederativeUnits(id)

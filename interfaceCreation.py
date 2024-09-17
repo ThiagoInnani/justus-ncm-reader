@@ -78,7 +78,14 @@ class Interface:
                              foreground=self.table_header_font,
                              font="bold")
         master.style.map('Treeview', background=[("selected", self.table_header_color)])
+        master.style.configure("TCombobox",
+                             fieldbackground=self.background_color, # Cor de fundo da área de seleção
+                             background=self.dropdown_button,       # Cor de fundo do combobox
+                             foreground=self.menu_font_color,       # Cor do texto
+                             selectbackground=self.dropdown_button) # Cor do fundo da seleção
+        
         self.menu_bar.config(background=self.menu_bar_color, foreground=self.menu_font_color)
+        
     
     def open_toplevel_base_icms(self, master):
         if master.toplevel_window is None or not master.toplevel_window.winfo_exists():
@@ -123,3 +130,7 @@ class Interface:
     @property
     def button_color(self):
         return '#1F6AA5'
+    
+    @property
+    def dropdown_button(self):
+        return '#565b5e'
