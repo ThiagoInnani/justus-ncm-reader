@@ -104,16 +104,18 @@ class App(customtkinter.CTk):
         self.filter_frame = buildWidgets.FilterFrame(self)
         self.mainButton_frame = buildWidgets.MainButtonFrame(self)
 
+        self.process_archive = processArchives.ProcessXmls(self)
+
         reload_combo_box(self)
         self.toplevel_window = None
 
-        self.mainButton_frame.buttons[0].configure(command=lambda: processArchives.ProcessXmls.openXmlFile(self))
-        self.mainButton_frame.buttons[1].configure(command=lambda: processArchives.ProcessXmls.reviewXmlFile(self))
+        self.mainButton_frame.buttons[0].configure(command=lambda: self.process_archive.openXmlFile())
+        self.mainButton_frame.buttons[1].configure(command=lambda: self.process_archive.reviewXmlFile())
         self.mainButton_frame.buttons[2].configure(command=lambda: save_button_click_event(self))
         self.mainButton_frame.buttons[3].configure(command=lambda: delete_button_click_event(self))
         self.mainButton_frame.buttons[4].configure(command=lambda: self.filter_frame.clear_filter())
-        self.mainButton_frame.buttons[5].configure(command=lambda: processArchives.ProcessXmls.analyze_button_click_event(self))
-        self.mainButton_frame.buttons[6].configure(command=lambda: processArchives.ProcessXmls.cfop_swap(self))
+        self.mainButton_frame.buttons[5].configure(command=lambda: self.process_archive.analyze_button_click_event())
+        self.mainButton_frame.buttons[6].configure(command=lambda: self.process_archive.cfop_swap())
 
         self.filter_frame.grid(row=0, column=0, padx=40, pady=(20, 0), sticky="WN")
         self.mainButton_frame.grid(row=0, column=1, padx=(40, 0), pady=(20, 0), sticky="NEW")

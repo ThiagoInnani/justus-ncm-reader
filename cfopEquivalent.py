@@ -57,6 +57,7 @@ class CFOPEquivalent(customtkinter.CTkToplevel):
         placeholders = ', '.join(['%s'] * len(cfop))  # Cria %s para cada CFOP
         query = f'''SELECT id, equivalent FROM CFOP WHERE id IN ({placeholders})'''
 
+        print(f'query: {query}')
         db_ops.cursor.execute(query, cfop)
         filtered_data = db_ops.cursor.fetchall()
         db_ops._close_connection()
