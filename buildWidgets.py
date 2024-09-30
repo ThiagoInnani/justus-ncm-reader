@@ -195,13 +195,14 @@ class MainButtonFrame(customtkinter.CTkFrame):
         print(f'Current filter: {self.combobox.get()}')
         return self.combobox.get()
     
-    def __init__(self, master):
+    def __init__(self, master, **kwargs):
         super().__init__(master)
         self.grid_columnconfigure((0,2), weight=1)
         self.grid_columnconfigure(1, weight=3)
+        self.grid_rowconfigure((0,1,2,3,4), weight=1)
 
-        self.import_button = customtkinter.CTkButton(self, text="Importar XMLs")
-        self.process_button = customtkinter.CTkButton(self, text="Filtrar XMLs")
+        self.import_button = customtkinter.CTkButton(self, text="Importar XMLs", font=('Arial', 16))
+        self.process_button = customtkinter.CTkButton(self, text="Filtrar XMLs", font=('Arial', 16))
 
         clear_filter_image = Image.open('./src/clear_filter.png')
         clear_filter_image_ctk = customtkinter.CTkImage(light_image=clear_filter_image,
@@ -209,49 +210,64 @@ class MainButtonFrame(customtkinter.CTkFrame):
                                                   size=(20,20))
         self.clear_filters_button = customtkinter.CTkButton(self,text="", image=clear_filter_image_ctk, width=20)
 
-        #grid
-        self.import_button.grid(row=1, column=0, columnspan=3, padx=10, pady=(0, 10), sticky="ew")
-        self.process_button.grid(row=2, column=0, columnspan=2, padx=10, pady=(0, 10), sticky="ew")
-        self.clear_filters_button.grid(row=2, column=2, padx=(0, 10), pady=(0, 10), sticky="ew")
-
-        self.clear_filters_button
-
         self.separatorUp = ttk.Separator(self, orient='horizontal')
-        self.separatorUp.grid(row=3, column=0, columnspan=3, padx=10, pady=10, sticky="ew")
-        
-        self.save_button = customtkinter.CTkButton(self, text="Salvar Filtro Atual")
-        self.save_button.grid(row=4, column=0, columnspan=3, padx=10, pady=(0, 10), sticky="ew")
+
+        self.save_button = customtkinter.CTkButton(self, text="Salvar Filtro Atual", font=('Arial', 16))
 
         delete_image = Image.open('./src/delete_icon.png')
         delete_image_ctk = customtkinter.CTkImage(light_image=delete_image,
                                                   dark_image=delete_image,
                                                   size=(20,20))
         self.delete_filter_button = customtkinter.CTkButton(self,text="", image=delete_image_ctk, width=20, fg_color='#cc0000', hover_color='#8e0000')
-        self.delete_filter_button.grid(row=5, column=0, padx=(10, 0), pady=(0, 10), sticky="ew")
-        
+
         combobox_var = customtkinter.StringVar(value="Filtro Novo")  # set initial value
         self.combobox = customtkinter.CTkOptionMenu(self,
                                      values=['Filtro Novo'],
                                      command=self.combobox_callback,
-                                     variable=combobox_var
+                                     variable=combobox_var,
+                                     font=('Arial', 16)
                                      )
-        self.combobox.grid(row=5, column=1, columnspan=2, padx=10, pady=(0, 10), sticky="ew")
+        #grid
+        self.import_button.grid(row=0, column=0, columnspan=3, pady=(0, 10), sticky="ew")
+        self.process_button.grid(row=1, column=0, columnspan=2, pady=(0, 10), sticky="ew")
+        self.clear_filters_button.grid(row=1, column=2, padx=(10,0), pady=(0, 10), sticky="ew")
 
-        self.separatorDown = ttk.Separator(self, orient='horizontal')
-        self.separatorDown.grid(row=6, column=0, columnspan=3, padx=10, pady=10, sticky="ew")
 
-        self.analyzer = customtkinter.CTkButton(self, text="Analisador")
-        self.analyzer.grid(row=7, column=0, columnspan=3, padx=10, pady=(0, 10), sticky="ew")
-
-        self.entries_label = customtkinter.CTkLabel(self, text="Entradas", font=("Arial", 16))
-        self.equivalent_switch = customtkinter.CTkSwitch(self, text="", onvalue='on', offvalue='off', 
-                                                         switch_width=50, switch_height=20
-                                                        )
-        self.exits_label = customtkinter.CTkLabel(self, text="Saídas", font=("Arial", 16))
+        self.separatorUp.grid(row=2, column=0, columnspan=3, pady=(5, 15), sticky="ew")
         
-        self.entries_label.grid(row=8, column=0, columnspan=1, padx=(10, 90), pady=(0,10), sticky="ew")
-        self.equivalent_switch.grid(row=8, column=1, columnspan=1, padx=10, pady=(0,10), sticky="ew")
-        self.exits_label.grid(row=8, column=2, padx=10, pady=(0,10), sticky="ew")
+        self.save_button.grid(row=3, column=0, columnspan=3, pady=(0, 10), sticky="ew")
 
-        self.buttons = [self.import_button, self.process_button, self.save_button, self.delete_filter_button,
-                         self.clear_filters_button, self.analyzer, self.equivalent_switch]
+        
+        self.delete_filter_button.grid(row=4, column=0, pady=(0, 10), padx=(0, 10), sticky="ew")
+        
+        self.combobox.grid(row=4, column=1, columnspan=2, pady=(0, 10), sticky="ew")
+
+class AnalyzeButtonFrame(customtkinter.CTkFrame):
+    def __init__(self, master, **kwargs):
+        super().__init__(master)
+        self.grid_columnconfigure((0,2), weight=1)
+        self.grid_columnconfigure(1, weight=3)
+        self.grid_rowconfigure((0,1,2), weight=1)
+
+        self.analyzer = customtkinter.CTkButton(self, text="Analisador", font=('Arial', 16))
+
+        self.entries_label = customtkinter.CTkLabel(self, text="Entradas", font=("Arial", 16), anchor='e')
+        self.equivalent_switch = customtkinter.CTkSwitch(self, text="Saídas", onvalue='on', offvalue='off', 
+                                                         switch_width=50, switch_height=20, font=('Arial', 16)
+                                                        )
+        
+        self.credited_money_label = customtkinter.CTkLabel(self, text="Imposto Creditado: ", font=("Arial", 16), anchor='w')
+        self.due_money_label = customtkinter.CTkLabel(self, text="Imposto Devido : ", font=("Arial", 16), anchor='w')
+        self.credit_money_value = customtkinter.CTkLabel(self, text="", font=("Arial", 16), anchor='w')
+        self.due_money_value = customtkinter.CTkLabel(self, text="", font=("Arial", 16), anchor='w')
+
+
+        #Grid
+        self.analyzer.grid(row=0, column=0, columnspan=3, pady=(0, 10), sticky="ew")
+        self.entries_label.grid(row=1, column=0, columnspan=1, padx=0, pady=(0,10), sticky="ew")
+        self.equivalent_switch.grid(row=1, column=1, columnspan=1, padx=(10,0), pady=(0,10), sticky="ew")
+        self.credited_money_label.grid(row=2, column=0, columnspan=2, pady=(0,10), sticky="ew")
+        self.due_money_label.grid(row=3, column=0, columnspan=2, pady=(0,10), sticky="ew")
+        self.credit_money_value.grid(row=2, column=2, pady=(0,10), sticky='ew')
+        self.due_money_value.grid(row=3, column=2, pady=(0,10), sticky='ew')
+ 

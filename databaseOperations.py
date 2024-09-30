@@ -76,13 +76,6 @@ class DatabaseOperations:
                 );
             ''')
             self.cursor.execute('''
-                CREATE TABLE IF NOT EXISTS CFOP (
-                    id VARCHAR(4) PRIMARY KEY,
-                    equivalent VARCHAR(4) NOT NULL,
-                    description TEXT
-                );
-            ''')
-            self.cursor.execute('''
                 CREATE TABLE IF NOT EXISTS CST (
                     id VARCHAR(3) PRIMARY KEY,
                     description TEXT
@@ -92,6 +85,18 @@ class DatabaseOperations:
                 CREATE TABLE IF NOT EXISTS CSOSN (
                     id VARCHAR(3) PRIMARY KEY,
                     description TEXT
+                );
+            ''')
+            self.cursor.execute('''
+                CREATE TABLE IF NOT EXISTS CFOP (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    cfop VARCHAR(4) NOT NULL,
+                    equivalent VARCHAR(4) NOT NULL,
+                    description TEXT,
+                    cst_id VARCHAR(3),
+                    csosn_id VARCHAR(3),
+                    FOREIGN KEY (cst_id) REFERENCES CST(id),
+                    FOREIGN KEY (csosn_id) REFERENCES CSOSN(id)
                 );
             ''')
             self.cursor.execute('''
@@ -148,7 +153,19 @@ class DatabaseOperations:
         if self.connection:
             self.connection.close()
             print("Conexão com banco fechada")
+    
+    def get_data(self, database, index):
+        if database == 'Nomenclaturas':
+            query = f'SELECT id FROM {database} WHERE LENGTH(id) = 8'
+        else:
+            query = f'SELECT * FROM {database}'
 
+        self.cursor.execute(query)
+        filtered_data = self.cursor.fetchall()
+        print(f'Filtered Data: {filtered_data}')
+
+        return [item[index] for item in filtered_data]
+    
 class DatabaseFill:
     def __init__(self, db_operations):
         self.db_operations = db_operations
@@ -209,7 +226,6 @@ class DatabaseFill:
     def insert_uf_in_table(self):
         with open("./data/UF.csv", "r") as file:
             reader = csv.reader(file)
-
             for row in reader:
                 self.db_operations.cursor.execute('''
                 INSERT INTO FederativeUnits (id, state_name)
@@ -220,10 +236,28 @@ class DatabaseFill:
     def insert_cfop_in_table(self):
         with open("./data/CFOP.csv", "r") as file:
             reader = csv.reader(file, delimiter=";")
+            cst_list = DatabaseOperations.get_data(self.db_operations, 'CST', 0)
+            csosn_list = DatabaseOperations.get_data(self.db_operations, 'CSOSN', 0)
 
-            for row in reader:
-                self.db_operations.cursor.execute('''
-                INSERT INTO CFOP (id, equivalent, description)
-                VALUES (%s, %s, %s)
-                ''', row)
-        self.db_operations._save_connection()    
+            # Inserção com CST
+            for cst in cst_list:
+                file.seek(0)  # Volta ao início do arquivo após cada leitura
+                for row in reader:
+                    # Insere com cst_id e csosn_id como NULL
+                    self.db_operations.cursor.execute('''
+                    INSERT INTO CFOP (cfop, equivalent, description, cst_id, csosn_id)
+                    VALUES (%s, %s, %s, %s, NULL)
+                    ''', (row[0], row[1], row[2], cst))
+
+            # Inserção com CSOSN
+            for csosn in csosn_list:
+                file.seek(0)  # Volta ao início do arquivo após cada leitura
+                for row in reader:
+                    # Insere com csosn_id e cst_id como NULL
+                    self.db_operations.cursor.execute('''
+                    INSERT INTO CFOP (cfop, equivalent, description, cst_id, csosn_id)
+                    VALUES (%s, %s, %s, NULL, %s)
+                    ''', (row[0], row[1], row[2], csosn))
+
+        # Salva as alterações no banco de dados
+        self.db_operations._save_connection()

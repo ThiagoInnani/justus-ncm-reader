@@ -54,7 +54,7 @@ class App(customtkinter.CTk):
             return self.values
 
         def save_button_click_event(self):
-            nome_filtro_atual = self.mainButton_frame.get_current_filter()
+            nome_filtro_atual = self.main_button_frame.get_current_filter()
             # Se for um filtro novo
             if nome_filtro_atual == "Filtro Novo":
                 dialog = customtkinter.CTkInputDialog(text="Digite o nome do filtro:", title="Nome do Filtro")
@@ -63,7 +63,7 @@ class App(customtkinter.CTk):
                     filter_lines = get_current_filter_lines(self)  # Define how to get the current filter lines
                     filter.Filter.save_filter(self, filter_name, filter_lines)
                     reload_combo_box(self)
-                    self.mainButton_frame.combobox.set(f"{filter_name}")
+                    self.main_button_frame.combobox.set(f"{filter_name}")
             # Se for um filtro já existente
             else:
                 answer = messagebox.askquestion('Sobrepor filtro no sistema', f'Tem certeza que deseja sobrescrever o filtro {nome_filtro_atual}?')
@@ -76,10 +76,10 @@ class App(customtkinter.CTk):
                     filter_lines = get_current_filter_lines(self)  # Define how to get the current filter lines
                     filter.Filter.edit_filter(self, filter_id, nome_filtro_atual, filter_lines)
                     reload_combo_box(self)
-                    self.mainButton_frame.combobox.set(f'{nome_filtro_atual}')
+                    self.main_button_frame.combobox.set(f'{nome_filtro_atual}')
 
         def delete_button_click_event(self):
-            nome_filtro_atual = self.mainButton_frame.get_current_filter()
+            nome_filtro_atual = self.main_button_frame.get_current_filter()
             if nome_filtro_atual != 'Filtro Novo':
                 answer = messagebox.askquestion('Deletar filtro do sistema', f'Tem certeza que deseja excluir o filtro {nome_filtro_atual}?')
                 if answer == 'yes':
@@ -90,36 +90,49 @@ class App(customtkinter.CTk):
                             break
                     filter.Filter.delete_filter(self, filter_id)
                     reload_combo_box(self)
-                    self.mainButton_frame.combobox.set("Filtro Novo")
+                    self.main_button_frame.combobox.set("Filtro Novo")
             else:
                 messagebox.showerror('ERRO: filtro não excluível', f'ERRO: não é possível excluir o filtro {nome_filtro_atual}')            
         
         def reload_combo_box(self):
             filter_names = [name for id, name in filter.Filter.load_filters(self)]
             print(f'List: {filter_names}')
-            self.mainButton_frame.combobox.configure(values = ["Filtro Novo"] + filter_names)
+            self.main_button_frame.combobox.configure(values = ["Filtro Novo"] + filter_names)
 
         """Cria os widgets da aplicação"""
-        self.table_frame = buildWidgets.TableFrame(self, titles=['N° da nota', 'Produto', 'NCM(s)', 'CFOP', 'CST/CSOSN', 'Descrição', 'Status'], values=[], height=25)
-        self.filter_frame = buildWidgets.FilterFrame(self)
-        self.mainButton_frame = buildWidgets.MainButtonFrame(self)
+        self.tabview = customtkinter.CTkTabview(master=self, width=400)
+        tab_filter = self.tabview.add('Filtros')
+        tab_analysis = self.tabview.add('Análise')
+        tab_filter.grid_columnconfigure(0, weight=1)
+        tab_filter.grid_rowconfigure(0, weight=1)
+        tab_analysis.grid_columnconfigure(0, weight=1)
+        tab_analysis.grid_rowconfigure(0, weight=1)
 
+        self.table_frame = buildWidgets.TableFrame(self, titles=['N° da nota', 'Produto', 'NCM(s)', 'CFOP', 'CST/CSOSN', 'Descrição', 'Status', 'Creditado', 'Devido'], values=[], height=25)
+        self.filter_frame = buildWidgets.FilterFrame(self)
+        self.main_button_frame = buildWidgets.MainButtonFrame(tab_filter)
+        self.analyze_button_frame = buildWidgets.AnalyzeButtonFrame(tab_analysis)
         self.process_archive = processArchives.ProcessXmls(self)
 
         reload_combo_box(self)
         self.toplevel_window = None
 
-        self.mainButton_frame.buttons[0].configure(command=lambda: self.process_archive.openXmlFile())
-        self.mainButton_frame.buttons[1].configure(command=lambda: self.process_archive.reviewXmlFile())
-        self.mainButton_frame.buttons[2].configure(command=lambda: save_button_click_event(self))
-        self.mainButton_frame.buttons[3].configure(command=lambda: delete_button_click_event(self))
-        self.mainButton_frame.buttons[4].configure(command=lambda: self.filter_frame.clear_filter())
-        self.mainButton_frame.buttons[5].configure(command=lambda: self.process_archive.analyze_button_click_event())
-        self.mainButton_frame.buttons[6].configure(command=lambda: self.process_archive.cfop_swap())
+        '''Conecta os botões do main_button_frame, process_archive e analyze_button_frame com suas funcionalidades'''
+        self.main_button_frame.import_button.configure(command=lambda: self.process_archive.openXmlFile())
+        self.main_button_frame.process_button.configure(command=lambda: self.process_archive.reviewXmlFile())
+        self.main_button_frame.save_button.configure(command=lambda: save_button_click_event(self))
+        self.main_button_frame.delete_filter_button.configure(command=lambda: delete_button_click_event(self))
+        self.main_button_frame.clear_filters_button.configure(command=lambda: self.filter_frame.clear_filter())
+        self.analyze_button_frame.analyzer.configure(command=lambda: self.process_archive.analyze_button_click_event())
+        self.analyze_button_frame.equivalent_switch.configure(command=lambda: self.process_archive.cfop_swap())
+
+        self.tabview.grid(row=0, column=1, sticky="NES")
+        self.tabview._segmented_button.grid(sticky="W")
 
         self.filter_frame.grid(row=0, column=0, padx=40, pady=(20, 0), sticky="WN")
-        self.mainButton_frame.grid(row=0, column=1, padx=(40, 0), pady=(20, 0), sticky="NEW")
         self.table_frame.grid(row=2, column=0, columnspan=2, sticky="NWSE")
+        self.main_button_frame.grid(row=0, column=0, padx=20, pady=10, sticky="NEWS")
+        self.analyze_button_frame.grid(row=0, column=0, padx=20, pady=10, sticky="NEWS")
 
 if __name__ == "__main__":
     app = App()

@@ -29,6 +29,7 @@ class ProcessXmls:
         arquivos_xml = [os.path.join(diretorio, f) for f in os.listdir(diretorio) if f.endswith('.xml')]
         self.table_data = []
         self.support_data = []
+        self.due_value = 0
 
         ns = {"": "http://www.portalfiscal.inf.br/nfe"}
         self.db_ops.connect_to_database()
@@ -44,6 +45,8 @@ class ProcessXmls:
                 csosn_list = [csosn.text for csosn in root.findall('.//CSOSN', ns)]
                 cst_list = [produto.find('.//CST', ns).text for produto in root.findall('.//det', ns) if produto.find('.//CST', ns) is not None]
                 picms_list = [produto.find('.//pICMS', ns).text if produto.find('.//pICMS', ns) is not None else '0' for produto in root.findall('.//det', ns)]
+                due_list = [produto.find('.//vICMS', ns).text if produto.find('.//vICMS', ns) is not None else '0' for produto in root.findall('.//det', ns)]
+                nf_total_value_list = [produto.find('.//vProd', ns).text for produto in root.findall('.//det', ns) if produto.find('.//vProd', ns) is not None]
                 # Busca a UF no bloco 'dest' ou 'enderEmit' se não encontrar
                 uf_list = root.find('.//dest//UF', ns)
                 print(f'picms: {picms_list}')
@@ -64,10 +67,14 @@ class ProcessXmls:
                     picms = picms_list[i] if i < len(picms_list) else ''
                     uf = uf_list_text if uf_list_text else ''
                     status = ''
+                    credit = ''
+                    due = due_list[i] if i < len(due_list) else ''
+                    nf_total_value = nf_total_value_list[i] if i < len(nf_total_value_list) else ''
 
-                    self.table_data.append([nota_num.text, xproduct, ncm, cfop, csosn_cst, descricao_ncm, status])
-                    self.support_data.append([picms, uf])
+                    self.table_data.append([nota_num.text, xproduct, ncm, cfop, csosn_cst, descricao_ncm, status, credit, due])
+                    self.support_data.append([picms, uf, nf_total_value])
 
+                    self.due_value += float(due)
             except ET.ParseError:
                 print(f"Erro ao parsear o arquivo {arquivo}")
 
@@ -75,14 +82,14 @@ class ProcessXmls:
         self.db_ops._save_connection()
         self.master.table_frame.clean_table()
         self.master.table_frame.add_item(self.table_data)
-
+        self.master.analyze_button_frame.due_money_value.configure(text=self.due_value)
         self.original_data = copy.deepcopy(self.table_data)
 
         if int(cfop_list[0]) >= 5000:
-            self.master.mainButton_frame.buttons[6].select()
+            self.master.analyze_button_frame.equivalent_switch.select()
             return
         if int(cfop_list[0]) < 5000:
-            self.master.mainButton_frame.buttons[6].deselect()
+            self.master.analyze_button_frame.equivalent_switch.deselect()
 
     def get_ncm_description(self, ncm_code):
         query = f"SELECT description FROM Nomenclaturas WHERE id = '{ncm_code}'"
@@ -108,7 +115,7 @@ class ProcessXmls:
             return False
 
         def apply_filter(row, field, operation, value):
-            fields = ["N° da nota", "Produto", "NCM(s)", "CFOP", "CST/CSOSN", "Descrição", "Status"]
+            fields = ["N° da nota", "Produto", "NCM(s)", "CFOP", "CST/CSOSN", "Descrição", "Status", "Creditado", "Devido"]
             index = fields.index(field)
             return compare(row[index], operation, value)
 
@@ -128,46 +135,56 @@ class ProcessXmls:
         self.is_analyze_button_active = False
         self.is_filter_button_active = True
 
-
     def analyze_button_click_event(self):
         self.filtered_data = []
         print(f'table_data: {self.table_data}, linhas: {list(enumerate(self.table_data))}')
-        for i, (row, support) in enumerate(zip(self.table_data, self.support_data)):
-            print(f'index: {i}')
-            picms = support[0]  # Obtém o valor picms da lista support_data
-            ncm_value = row[2]  # Assumindo que NCM está na coluna 2
-            uf_value = support[1]  # Obtém o valor uf da lista support_data
-            cst_csosn_value = row[4]  # Assumindo que CST/CSOSN está na coluna 4
-            status = ""
 
-            # Processa e compara os dados como antes
-            picms = float(picms)
-            print(f'PICMS: {picms}, NCM: {ncm_value}, UF: {uf_value}, CST/CSOSN: {cst_csosn_value}')
-            db_base_icms = baseIcms.BaseICMS.get_base_icms(ncm_value, uf_value, cst_csosn_value)
+        self.credit_value = 0
+        if self.table_data:
+            for i, (row, support) in enumerate(zip(self.table_data, self.support_data)):
+                print(f'index: {i}')
+                picms = support[0]  # Obtém o valor picms da lista support_data
+                ncm_value = row[2]  # Assumindo que NCM está na coluna 2
+                uf_value = support[1]  # Obtém o valor uf da lista support_data
+                cst_csosn_value = row[4]  # Assumindo que CST/CSOSN está na coluna 4
+                status = ""
+                credit = ""
+                nf_total = support[2] #Obtém o valor de Total da Nota 
 
-            print(f'DB_BASE_ICMS_ANTES: {db_base_icms}')
-            var_aux = False
+                # Processa e compara os dados como antes
+                picms = float(picms)
+                print(f'PICMS: {picms}, NCM: {ncm_value}, UF: {uf_value}, CST/CSOSN: {cst_csosn_value}')
+                db_base_icms = baseIcms.BaseICMS.get_base_icms(ncm_value, uf_value, cst_csosn_value)
 
-            if not db_base_icms:
-                status = 'Base ICMS sem valor no sistema'
-                print('Base ICMS sem valor no sistema')
-                var_aux = True
-            else:
-                db_base_icms = float(db_base_icms[0][0])
-                print(f'db_base_icms_DEPOIS: {db_base_icms}')
-                if db_base_icms != picms:
-                    status = f'ERRO: Alíq. ICMS da nota ({picms}) deve ser {db_base_icms}'
-                    print('Diferentes!!')
+                print(f'DB_BASE_ICMS_ANTES: {db_base_icms}')
+                var_aux = False
+
+                if not db_base_icms:
+                    status = 'Base ICMS sem valor no sistema'
+                    print('Base ICMS sem valor no sistema')
                     var_aux = True
+                    credit = 0
                 else:
-                    status = 'Correto'
-                    print('Iguais!!')
-                    var_aux = False
+                    db_base_icms = float(db_base_icms[0][0])
+                    nf_total = float(nf_total)
+                    print(f'db_base_icms_DEPOIS: {db_base_icms}')
+                    credit = (db_base_icms/100)*nf_total
+                    credit = round(credit, 2)
+                    if db_base_icms != picms:
+                        status = f'ERRO: Alíq. ICMS da nota ({picms}) deve ser {db_base_icms}'
+                        print('Diferentes!!')
+                        var_aux = True
+                    else:
+                        status = 'Correto'
+                        print('Iguais!!')
+                        var_aux = False
 
-            row[6] = status
+                row[6] = status
+                row[7] = credit
+                self.credit_value+=float(credit)
 
-            if status and var_aux:
-                self.filtered_data.append(row)
+                if status and var_aux:
+                    self.filtered_data.append(row)
 
         if self.filtered_data:
             self.master.table_frame.clean_table()
@@ -177,14 +194,17 @@ class ProcessXmls:
         else:
             messagebox.showerror('ERRO: Tabela sem dados', 'ERRO: Sem dados na tabela para filtrar')
         
-
-
+        self.master.analyze_button_frame.credit_money_value.configure(text = self.credit_value)
+        
     def cfop_swap(self):
         cfop_list = self.master.table_frame.get_tree(3)
+        cst_csosn_list = self.master.table_frame.get_tree(4)
+
         if cfop_list:
             if not self.is_switch_activated_once:
                 print('O switch ativou uma vez')
-                cfop_equivalent = cfopEquivalent.CFOPEquivalent.get_cfop_equivalent(self, cfop_list)
+                cfop_equivalent = cfopEquivalent.CFOPEquivalent.get_cfop_equivalent(self, cfop_list, cst_csosn_list)
+                print(f'CFOP EQUIVALENT: {cfop_equivalent}')
                 for i, row in enumerate(self.filtered_data):
                     row[3] = cfop_equivalent[i]
                     
@@ -213,8 +233,7 @@ class ProcessXmls:
             if self.is_filter_button_active:
                 self.master.process_archive.reviewXmlFile()
                 return
-
         else:
             messagebox.showerror('ERRO: Tabela sem dados', 'ERRO: Sem dados na tabela para filtrar')
-            self.master.mainButton_frame.buttons[6].deselect()
+            self.master.analyze_button_frame.equivalent_switch.deselect()
             
