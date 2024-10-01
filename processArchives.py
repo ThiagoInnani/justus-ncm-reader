@@ -30,6 +30,7 @@ class ProcessXmls:
         self.table_data = []
         self.support_data = []
         self.due_value = 0
+        self.master.analyze_button_frame.credit_money_value.configure(text ='R$')
 
         ns = {"": "http://www.portalfiscal.inf.br/nfe"}
         self.db_ops.connect_to_database()
@@ -70,8 +71,9 @@ class ProcessXmls:
                     credit = ''
                     due = due_list[i] if i < len(due_list) else ''
                     nf_total_value = nf_total_value_list[i] if i < len(nf_total_value_list) else ''
+                    difference = ''
 
-                    self.table_data.append([nota_num.text, xproduct, ncm, cfop, csosn_cst, descricao_ncm, status, credit, due])
+                    self.table_data.append([nota_num.text, xproduct, ncm, cfop, csosn_cst, descricao_ncm, status, credit, due, difference])
                     self.support_data.append([picms, uf, nf_total_value])
 
                     self.due_value += float(due)
@@ -82,7 +84,7 @@ class ProcessXmls:
         self.db_ops._save_connection()
         self.master.table_frame.clean_table()
         self.master.table_frame.add_item(self.table_data)
-        self.master.analyze_button_frame.due_money_value.configure(text=self.due_value)
+        self.master.analyze_button_frame.due_money_value.configure(text = f'R$ {round(self.due_value)}')
         self.original_data = copy.deepcopy(self.table_data)
 
         if int(cfop_list[0]) >= 5000:
@@ -115,7 +117,8 @@ class ProcessXmls:
             return False
 
         def apply_filter(row, field, operation, value):
-            fields = ["N° da nota", "Produto", "NCM(s)", "CFOP", "CST/CSOSN", "Descrição", "Status", "Creditado", "Devido"]
+            fields = ["N° da nota", "Produto", "NCM(s)", "CFOP", "CST/CSOSN",
+                      "Descrição", "Status", "Crédito (R$)", "Débito (R$)", "Diferença (R$)"]
             index = fields.index(field)
             return compare(row[index], operation, value)
 
@@ -149,13 +152,14 @@ class ProcessXmls:
                 cst_csosn_value = row[4]  # Assumindo que CST/CSOSN está na coluna 4
                 status = ""
                 credit = ""
+                difference = ""
                 nf_total = support[2] #Obtém o valor de Total da Nota 
 
                 # Processa e compara os dados como antes
                 picms = float(picms)
                 print(f'PICMS: {picms}, NCM: {ncm_value}, UF: {uf_value}, CST/CSOSN: {cst_csosn_value}')
                 db_base_icms = baseIcms.BaseICMS.get_base_icms(ncm_value, uf_value, cst_csosn_value)
-
+                db_cst_csosn = baseIcms.BaseICMS.get_cst_csosn(ncm_value, uf_value)
                 print(f'DB_BASE_ICMS_ANTES: {db_base_icms}')
                 var_aux = False
 
@@ -175,12 +179,26 @@ class ProcessXmls:
                         print('Diferentes!!')
                         var_aux = True
                     else:
-                        status = 'Correto'
+                        status = 'Alíq. ICMS correta'
                         print('Iguais!!')
                         var_aux = False
 
+                if len(cst_csosn_value) < 3:
+                    cst_csosn_value = '0' + cst_csosn_value    
+                
+                if db_cst_csosn:
+                    # Filtrando os valores que são diferentes de cst_csosn_value
+                    filtered_values = [str(item[0]) for item in db_cst_csosn if item[0] != cst_csosn_value]
+                    
+                    # Verificando se a lista filtrada contém mais de um item
+                    if filtered_values:
+                        status += f', CST/CSOSN pode(m) ser: {", ".join(filtered_values)}'
+
+                print(f'Difference: {row[8]}')
+                difference = abs(float(credit)-float(row[8]))
                 row[6] = status
                 row[7] = credit
+                row[9] = difference
                 self.credit_value+=float(credit)
 
                 if status and var_aux:
@@ -194,7 +212,7 @@ class ProcessXmls:
         else:
             messagebox.showerror('ERRO: Tabela sem dados', 'ERRO: Sem dados na tabela para filtrar')
         
-        self.master.analyze_button_frame.credit_money_value.configure(text = self.credit_value)
+        self.master.analyze_button_frame.credit_money_value.configure(text = f'R$ {round(self.credit_value, 2)}')
         
     def cfop_swap(self):
         cfop_list = self.master.table_frame.get_tree(3)

@@ -232,14 +232,10 @@ class MainButtonFrame(customtkinter.CTkFrame):
         self.process_button.grid(row=1, column=0, columnspan=2, pady=(0, 10), sticky="ew")
         self.clear_filters_button.grid(row=1, column=2, padx=(10,0), pady=(0, 10), sticky="ew")
 
-
         self.separatorUp.grid(row=2, column=0, columnspan=3, pady=(5, 15), sticky="ew")
-        
-        self.save_button.grid(row=3, column=0, columnspan=3, pady=(0, 10), sticky="ew")
 
-        
+        self.save_button.grid(row=3, column=0, columnspan=3, pady=(0, 10), sticky="ew")
         self.delete_filter_button.grid(row=4, column=0, pady=(0, 10), padx=(0, 10), sticky="ew")
-        
         self.combobox.grid(row=4, column=1, columnspan=2, pady=(0, 10), sticky="ew")
 
 class AnalyzeButtonFrame(customtkinter.CTkFrame):
@@ -256,15 +252,15 @@ class AnalyzeButtonFrame(customtkinter.CTkFrame):
                                                          switch_width=50, switch_height=20, font=('Arial', 16)
                                                         )
         
-        self.credited_money_label = customtkinter.CTkLabel(self, text="Imposto Creditado: ", font=("Arial", 16), anchor='w')
-        self.due_money_label = customtkinter.CTkLabel(self, text="Imposto Devido : ", font=("Arial", 16), anchor='w')
-        self.credit_money_value = customtkinter.CTkLabel(self, text="", font=("Arial", 16), anchor='w')
-        self.due_money_value = customtkinter.CTkLabel(self, text="", font=("Arial", 16), anchor='w')
+        self.credited_money_label = customtkinter.CTkLabel(self, text="Imposto ICMS Creditado: ", font=("Arial", 16), anchor='w')
+        self.due_money_label = customtkinter.CTkLabel(self, text="Imposto ICMS Devido : ", font=("Arial", 16), anchor='w')
+        self.credit_money_value = customtkinter.CTkLabel(self, text="R$", font=("Arial", 16), anchor='w')
+        self.due_money_value = customtkinter.CTkLabel(self, text="R$", font=("Arial", 16), anchor='w')
 
 
         #Grid
         self.analyzer.grid(row=0, column=0, columnspan=3, pady=(0, 10), sticky="ew")
-        self.entries_label.grid(row=1, column=0, columnspan=1, padx=0, pady=(0,10), sticky="ew")
+        self.entries_label.grid(row=1, column=0, columnspan=1, padx=(55, 0), pady=(0,10), sticky="ew")
         self.equivalent_switch.grid(row=1, column=1, columnspan=1, padx=(10,0), pady=(0,10), sticky="ew")
         self.credited_money_label.grid(row=2, column=0, columnspan=2, pady=(0,10), sticky="ew")
         self.due_money_label.grid(row=3, column=0, columnspan=2, pady=(0,10), sticky="ew")

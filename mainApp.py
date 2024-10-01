@@ -108,7 +108,9 @@ class App(customtkinter.CTk):
         tab_analysis.grid_columnconfigure(0, weight=1)
         tab_analysis.grid_rowconfigure(0, weight=1)
 
-        self.table_frame = buildWidgets.TableFrame(self, titles=['N° da nota', 'Produto', 'NCM(s)', 'CFOP', 'CST/CSOSN', 'Descrição', 'Status', 'Creditado', 'Devido'], values=[], height=25)
+        self.table_frame = buildWidgets.TableFrame(self, titles=['N° da nota', 'Produto', 'NCM(s)', 'CFOP', 'CST/CSOSN',
+                                                                 'Descrição', 'Status', 'Crédito (R$)', 'Débito (R$)', 'Diferença (R$)'
+                                                                ], values=[], height=25)
         self.filter_frame = buildWidgets.FilterFrame(self)
         self.main_button_frame = buildWidgets.MainButtonFrame(tab_filter)
         self.analyze_button_frame = buildWidgets.AnalyzeButtonFrame(tab_analysis)

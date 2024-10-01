@@ -268,6 +268,19 @@ class BaseICMS(customtkinter.CTkToplevel):
         db_ops._close_connection
         return filtered_data
 
+    def get_cst_csosn(ncm_value, uf_value):
+        db_ops = databaseOperations.DatabaseOperations()
+        db_ops.connect_to_database()
+        query = f'''SELECT CONCAT_WS('', cst_id, csosn_id) 
+        FROM BaseIcms 
+        WHERE nomenclatura_id={ncm_value}
+        AND federative_unit_id="{uf_value}"
+        '''
+        filtered_data = db_ops.execute_command(query)
+        db_ops._close_connection
+        print(f"CST/CSOSN: {filtered_data}")
+        return filtered_data
+
 class BaseIcmsButtonsFrame(customtkinter.CTkFrame):
     def __init__(self, master):
         super().__init__(master)
